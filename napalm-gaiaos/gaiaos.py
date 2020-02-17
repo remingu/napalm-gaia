@@ -12,6 +12,12 @@ class GaiaOSDriver(NetworkDriver):
         pass
 
 
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
 
 if __name__ == '__main__':
     pass
