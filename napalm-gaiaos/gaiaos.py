@@ -25,6 +25,22 @@ class GaiaOSDriver(NetworkDriver):
     def close(self):
         self._netmiko_close()
     
+    def cli(self, commands: list) -> dict:
+        output = {}
+        try:
+            if isinstance(commands, list):
+                for cmd in commands:
+                    output[cmd] = self.device.send_command(cmd)
+            else:
+                raise TypeError(
+                    "Expected <class 'list'> not a {}".format(
+                        type(commands)
+                        )
+                    )
+            return output
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+    
     def get_users(self):
         pass
 
