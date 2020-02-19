@@ -1,5 +1,7 @@
 import logging
 import urllib3
+import re
+import socket
 from napalm.base.base import NetworkDriver
 
 
@@ -9,15 +11,20 @@ class GaiaOSDriver(NetworkDriver):
             password='',
             timeout=10,
             optional_args=None):
-        pass
-
+        
+        self.hostname = hostname
+        self.username = username
+        self.password = password
+        self.timeout = timeout
+        self.optional_args = optional_args
 
     def open(self):
-        pass
+        device_type = "checkpoint_gaia"
+        self.device = self._netmiko_open(device_type, netmiko_optional_args=self.optional_args)
 
     def close(self):
-        pass
-
+        self._netmiko_close()
+    
     def get_users(self):
         pass
 
