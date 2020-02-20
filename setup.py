@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(
-    name='napalm-gaia',
+    name='napalm_gaia',
     version='',
-    packages=['napalm-gaiaos', 'napalm-gaiaos.helper'],
+    packages=['napalm_gaiaos', 'napalm-gaiaos.helper'],
     url='',
     license='',
     author='remingu, mbtathcx',
