@@ -2,10 +2,10 @@ import logging
 import urllib3
 import re
 import socket
-from napalm.base.base import NetworkDriver
+import napalm
 
 
-class GaiaOSDriver(NetworkDriver):
+class GaiaOSDriver(napalm.base.base.NetworkDriver):
     def __init__(self, hostname,
             username='',
             password='',
@@ -41,7 +41,7 @@ class GaiaOSDriver(NetworkDriver):
             raise ConnectionClosedException(str(e))
     
     def get_users(self):
-        pass
+        print('blub')
 
     def get_arp_table(self, vrf=""):
         pass
