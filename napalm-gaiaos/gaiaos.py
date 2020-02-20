@@ -11,7 +11,6 @@ class GaiaOSDriver(NetworkDriver):
             password='',
             timeout=10,
             optional_args=None):
-        
         self.hostname = hostname
         self.username = username
         self.password = password
