@@ -1,2 +1,2 @@
-from napalm_gaiaos.custom_gaiaos import GaiaOSDriver
+from napalm_gaiaos.gaiaos import GaiaOSDriver
 __all__ = ('GaiaOSDriver',)
