@@ -18,7 +18,7 @@ class GaiaOSDriver(NetworkDriver):
         self.optional_args = optional_args
 
     def open(self):
-        device_type = "checkpoint_gaia"
+        device_type = "cpgaia"
         self.device = self._netmiko_open(device_type, netmiko_optional_args=self.optional_args)
 
     def close(self):
