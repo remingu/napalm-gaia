@@ -1,4 +1,4 @@
-''setup.py file.''
+"""setup.py file."""
 import uuid
 
 from setuptools import setup, find_packages
