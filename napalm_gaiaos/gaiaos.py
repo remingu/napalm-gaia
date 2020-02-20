@@ -3,9 +3,15 @@ import urllib3
 import re
 import socket
 import napalm
+from napalm.base.base import NetworkDriver
+from napalm.base.exceptions import ConnectionException, SessionLockedException, \
+                                   MergeConfigException, ReplaceConfigException,\
+                                   CommandErrorException
 
 
-class GaiaOSDriver(napalm.base.base.NetworkDriver):
+
+
+class GaiaOSDriver(NetworkDriver):
     def __init__(self, hostname,
             username='',
             password='',
