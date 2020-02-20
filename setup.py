@@ -6,7 +6,7 @@ setup(
     packages=['napalm-gaiaos', 'napalm-gaiaos.helper'],
     url='',
     license='',
-    author='remingu',
+    author='remingu, mbtathcx',
     author_email='',
     description=''
 )
