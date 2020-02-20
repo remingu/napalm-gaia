@@ -41,7 +41,7 @@ class GaiaOSDriver(napalm.base.base.NetworkDriver):
             raise ConnectionClosedException(str(e))
     
     def get_users(self):
-        print('blub')
+        pass
 
     def get_arp_table(self, vrf=""):
         pass
