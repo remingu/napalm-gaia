@@ -43,8 +43,25 @@ class GaiaOSDriver(NetworkDriver):
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
     
-    def get_users(self):
-        pass
+    def get_users(self) -> dict:
+        username_regex = (
+            r"^([A-z0-9_-]{1,32})\s+(\d+)\s+(\d+)\s+([/A-z0-9_-]{1,})\s+"
+            r"([./A-z0-9_-]{1,})\s+((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-])\s+"
+            r"((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-]).+?$"
+        )
+        users = {}
+        command = "show users"
+        output = self.device.send_command(command)
+        for match in re.finditer(username_regex, output, re.M):
+            users[match.group(1)] = {
+                "uid": match.group(2),
+                "gid": match.group(3),
+                "homedir": match.group(4),
+                "shell": match.group(5),
+                "name": match.group(6),
+                "privileges": match.group(7),
+            }
+        return users
 
     def get_arp_table(self, vrf=""):
         pass
