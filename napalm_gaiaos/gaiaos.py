@@ -64,6 +64,8 @@ class GaiaOSDriver(NetworkDriver):
     def get_interfaces_ip(self):
         pass
 
+    def func(self):
+        return 'im a Dummy'
 
 if __name__ == '__main__':
     pass
