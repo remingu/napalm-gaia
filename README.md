@@ -5,7 +5,6 @@ CheckPoint Gaia driver-plugin for NAPALM (Network Automation and Programmability
 
 ## simple test
     #!/usr/bin/python3
-    import json
     from napalm import get_network_driver
     
     
