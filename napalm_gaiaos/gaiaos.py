@@ -21,7 +21,7 @@ class GaiaOSDriver(NetworkDriver):
         self.optional_args = optional_args
 
     def open(self):
-        device_type = "cisco_ios"
+        device_type = 'cisco_ios'
         self.device = self._netmiko_open(device_type, netmiko_optional_args=self.optional_args)
 
     def close(self):
@@ -35,7 +35,7 @@ class GaiaOSDriver(NetworkDriver):
                     output[cmd] = self.device.send_command(cmd)
             else:
                 raise TypeError(
-                    "Expected <class 'list'> not a {}".format(
+                    'Expected <class 'list'> not a {}'.format(
                         type(commands)
                         )
                     )
@@ -45,28 +45,28 @@ class GaiaOSDriver(NetworkDriver):
     
     def get_users(self) -> dict:
         username_regex = (
-            r"^([A-z0-9_-]{1,32})\s+(\d+)\s+(\d+)\s+([/A-z0-9_-]{1,})\s+"
-            r"([./A-z0-9_-]{1,})\s+((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-])\s+"
-            r"((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-]).+?$"
+            r'^([A-z0-9_-]{1,32})\s+(\d+)\s+(\d+)\s+([/A-z0-9_-]{1,})\s+'
+            r'([./A-z0-9_-]{1,})\s+((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-])\s+'
+            r'((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-]).+?$'
         )
         users = {}
-        command = "show users"
+        command = 'show users'
         output = self.device.send_command(command)
         for match in re.finditer(username_regex, output, re.M):
             users[match.group(1)] = {
-                "uid": match.group(2),
-                "gid": match.group(3),
-                "homedir": match.group(4),
-                "shell": match.group(5),
-                "name": match.group(6),
-                "privileges": match.group(7),
+                'uid': match.group(2),
+                'gid': match.group(3),
+                'homedir': match.group(4),
+                'shell': match.group(5),
+                'name': match.group(6),
+                'privileges': match.group(7),
             }
         return users
 
-    def get_arp_table(self, vrf=""):
+    def get_arp_table(self, vrf=''):
         pass
 
-    def get_config(self, retrieve="all", full=False):
+    def get_config(self, retrieve='all', full=False):
         pass
 
     def get_facts(self):
