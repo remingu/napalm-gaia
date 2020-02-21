@@ -1,5 +1,4 @@
 import logging
-import urllib3
 import re
 import socket
 import napalm
