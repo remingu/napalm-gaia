@@ -8,8 +8,6 @@ from napalm.base.exceptions import ConnectionException, SessionLockedException, 
                                    CommandErrorException
 
 
-
-
 class GaiaOSDriver(NetworkDriver):
     def __init__(self, hostname,
             username='',
