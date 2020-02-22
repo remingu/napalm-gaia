@@ -66,7 +66,7 @@ class GaiaOSDriver(NetworkDriver):
             }
         return users
 
-    def get_arp_table(self, vrf=''):
+    def get_arp_table(self, vrf='') -> list:
         """
                 Get arp table information.
                 Return a list of dictionaries having the following set of keys:
@@ -74,24 +74,47 @@ class GaiaOSDriver(NetworkDriver):
                     * mac (string)
                     * ip (string)
                     * age (float)
+                    * state (string)
                 For example::
                     [
                         {
                             'interface' : 'eth0',
                             'mac'       : '5c:5e:ab:da:3c:f0',
                             'ip'        : '172.17.17.1',
-                            'age'       : 0.0
+                            'age'       : 875.0
+                            'state'     : 'REACHABLE'
                         },
                         {
                             'interface': 'eth0',
                             'mac'       : '66:0e:94:96:e0:ff',
                             'ip'        : '172.17.17.2',
                             'age'       : 0.0
+                            'state'     : 'STALE'
                         }
                     ]
                 """
-        arptable_regex = ()
-        commands = 'ip -statistics show'
+        arptable_regex = r'^([0-9.:a-f]+)\sdev\s([a-zA-Z0-9._-]+)\slladdr\s([0-9a-f:]+)\s' \
+                         r'ref\s[0-9]+\sused\s([0-9]+).*probes\s[0-9]+\s([a-zA-Z]+)*$'
+        command = 'ip -stat neigh'
+        arp_entries = []
+        if self._enter_expert_mode() is True:
+            output = self.device.send_command(command)
+            self._exit_expert_mode()
+        else:
+            return arp_entries
+        output = str(output).split('\n')
+        for line in output:
+            if re.match(arptable_regex, line):
+                table_entry = re.search(arptable_regex, line)
+                arp_entries.append({'interface': str(table_entry.group(2)),
+                                    'mac': str(table_entry.group(3)),
+                                    'ip': str(table_entry.group(1)),
+                                    'age': float(table_entry.group(4)),
+                                    'state': str(table_entry.group(5))}
+                                   )
+        return arp_entries
+
+
 
 
 
@@ -111,7 +134,7 @@ class GaiaOSDriver(NetworkDriver):
         return 'im a Dummy'
 
     def _enter_expert_mode(self) -> bool:
-        # --->enter func to verify new expert prompt
+        # --->enter func to verify expert prompt
         output = self.device.send_command_timing('expert')
         if 'Enter expert password:' in output:
             output += self.device.send_command_timing(self.expert_password)
