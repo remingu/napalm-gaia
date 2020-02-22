@@ -1,7 +1,7 @@
 # napalm-gaia
 
-CheckPoint Gaia driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library 
-Certain commands require expert mode accessible.
+CheckPoint Gaia driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library.<br> 
+Certain commands will require expert mode accessible.
 
 ## install
  
