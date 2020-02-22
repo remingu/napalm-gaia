@@ -74,52 +74,7 @@ class GaiaOSDriver(NetworkDriver):
         return users
 
     def get_arp_table(self, vrf='') -> list:
-        """
-                Get arp table information.
-                Return a list of dictionaries having the following set of keys:
-                    * interface (string)
-                    * mac (string)
-                    * ip (string)
-                    * age (float)
-                    * state (string)
-                For example::
-                    [
-                        {
-                            'interface' : 'eth0',
-                            'mac'       : '5c:5e:ab:da:3c:f0',
-                            'ip'        : '172.17.17.1',
-                            'age'       : 875.0
-                            'state'     : 'REACHABLE'
-                        },
-                        {
-                            'interface': 'eth0',
-                            'mac'       : '66:0e:94:96:e0:ff',
-                            'ip'        : '172.17.17.2',
-                            'age'       : 0.0
-                            'state'     : 'STALE'
-                        }
-                    ]
-                """
-        arptable_regex = r'^([0-9.:a-f]+)\sdev\s([a-zA-Z0-9._-]+)\slladdr\s([0-9a-f:]+)\s' \
-                         r'ref\s[0-9]+\sused\s([0-9]+).*probes\s[0-9]+\s([a-zA-Z]+)*$'
-        command = 'ip -stat neigh'
-        arp_entries = []
-        if self._enter_expert_mode() is True:
-            output = self.device.send_command(command)
-            self._exit_expert_mode()
-        else:
-            return arp_entries
-        output = str(output).split('\n')
-        for line in output:
-            if re.match(arptable_regex, line):
-                table_entry = re.search(arptable_regex, line)
-                arp_entries.append({'interface': str(table_entry.group(2)),
-                                    'mac': str(table_entry.group(3)),
-                                    'ip': str(table_entry.group(1)),
-                                    'age': float(table_entry.group(4)),
-                                    'state': str(table_entry.group(5))}
-                                   )
-        return arp_entries
+        pass
 
     def get_config(self, retrieve='all', full=False):
         pass
@@ -142,71 +97,29 @@ class GaiaOSDriver(NetworkDriver):
             output += self.device.send_command_timing(self.expert_password)
         else:
             return False
-        if self._check_expert_mode() is True:
-            return True
-        else:
-            raise RuntimeError('unable to enter expert mode')
-
-    def _exit_expert_mode(self) -> bool:
-        '''
-            :return: bool
-        '''
-        if self._check_expert_mode() is True:
-            self.device.send_command('exit')
-        else:
-            return False
         return True
 
-    def _check_expert_mode(self) -> bool:
+
+    def _exit_expert_mode(self):
         '''
             :return: bool
         '''
-        ps = self.device.find_prompt()
-        regex = r'\[Expert@[0-9a-zA-Z-_.].+[0-9]+.*#'
-        if re.match(regex, ps):
-            return True
-        else:
-            return False
+        self.device.send_command('exit')
+
+
+    def _check_expert_mode(self) -> bool:
+        pass
 
     def send_clish_cmd(self, cmd: str) -> list:
-        if isinstance(cmd, str):
-            if len(cmd) > 0:
-                try:
-                    self.device.find_prompt()
-                    output = self.device.send_command(cmd)
-                except (socket.error, EOFError) as e:
-                    raise ConnectionClosedException(str(e))
-                try:
-                    output = str(output).split('\n')
-                    return output
-                except Exception as e:
-                    raise ValueError(e)
-            else:
-                raise ValueError('cmd: empty string - nothing to do')
-        else:
-            raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
+        output = self.device.send_command(cmd)
+        return output
 
-    def send_expert_cmd(self, cmd: str) -> list:
-        output = []
-        if isinstance(cmd, str):
-            if len(cmd) > 0:
-                try:
-                    self.device.find_prompt()
-                    while self._check_expert_mode() is False:
-                        if self._enter_expert_mode() is True:
-                            output = self.device.send_command(cmd)
-                            self._exit_expert_mode()
-                except (socket.error, EOFError) as e:
-                    raise ConnectionClosedException(str(e))
-                try:
-                    output = str(output).split('\n')
-                    return output
-                except Exception as e:
-                    raise ValueError(e)
-            else:
-                raise ValueError('cmd: empty string - nothing to do')
-        else:
-            raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
+
+    def send_expert_cmd(self, cmd: str) -> str:
+        self._enter_expert_mode()
+        output = self.device.send_command(cmd)
+        self._exit_expert_mode()
+        return output
 
 
 if __name__ == '__main__':
