@@ -5,7 +5,7 @@ CheckPoint Gaia driver-plugin for NAPALM (Network Automation and Programmability
 ## install
  
 we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install or rpm.<br>
-If you're on *.deb based distributions you can use 'alien' to convert the rpm to deb and then install it via apt or dpkg.
+
 
 
 
