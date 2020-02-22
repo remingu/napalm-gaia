@@ -12,7 +12,6 @@ class GaiaOSDriver(NetworkDriver):
     def __init__(self, hostname,
             username='',
             password='',
-            secret='',
             timeout=10,
             optional_args=None):
         self.hostname = hostname
