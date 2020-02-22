@@ -12,16 +12,18 @@ class GaiaOSDriver(NetworkDriver):
     def __init__(self, hostname,
             username='',
             password='',
+            secret='',
             timeout=10,
             optional_args=None):
         self.hostname = hostname
         self.username = username
         self.password = password
+        self.expert_password = secret
         self.timeout = timeout
         self.optional_args = optional_args
 
     def open(self):
-        device_type = 'cisco_ios'
+        device_type = 'checkpoint_gaia'
         self.device = self._netmiko_open(device_type, netmiko_optional_args=self.optional_args)
 
     def close(self):
