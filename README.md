@@ -5,7 +5,7 @@ Certain commands will require expert password.
 
 ## install
  
-we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install or rpm/dpkg.<br>
+we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install or rpm/dpkg.
 
 ## documentation
 
