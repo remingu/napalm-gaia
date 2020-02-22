@@ -182,7 +182,7 @@ class GaiaOSDriver(NetworkDriver):
                 except Exception as e:
                     raise ValueError(e)
             else:
-                raise TypeError('cmd: empty string - nothing to do')
+                raise ValueError('cmd: empty string - nothing to do')
         else:
             raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
 
