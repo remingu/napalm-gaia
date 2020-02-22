@@ -171,15 +171,21 @@ class GaiaOSDriver(NetworkDriver):
     def send_clish_cmd(self, cmd: str) -> list:
         if isinstance(cmd, str):
             if len(cmd) > 0:
-                self.device.find_prompt()
-                output = self.device.send_command(cmd)
-                output = str(output).split('\n')
-                return output
+                try:
+                    self.device.find_prompt()
+                    output = self.device.send_command(cmd)
+                except (socket.error, EOFError) as e:
+                    raise ConnectionClosedException(str(e))
+                try:
+                    output = str(output).split('\n')
+                    return output
+                except Exception as e:
+                    raise ValueError(e)
             else:
                 raise TypeError('cmd: empty string - nothing to do')
         else:
             raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
-        return []
+
 
 
 
