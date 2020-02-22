@@ -21,7 +21,7 @@ class GaiaOSDriver(NetworkDriver):
         self.expert_password = secret
         self.timeout = timeout
         self.optional_args = optional_args
-        self.config_mode = 'clish'
+
 
     def open(self):
         device_type = 'checkpoint_gaia'
