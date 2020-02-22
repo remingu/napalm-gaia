@@ -18,9 +18,11 @@ class GaiaOSDriver(NetworkDriver):
         self.hostname = hostname
         self.username = username
         self.password = password
-        self.expert_password = secret
+        self.expert_password = ''
         self.timeout = timeout
         self.optional_args = optional_args
+        if 'secret' in optional_args:
+            self.expert_password = optional_args['secret']
 
 
     def open(self):
