@@ -1,7 +1,7 @@
 # napalm-gaia
 
-CheckPoint Gaia driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library.<br> 
-Certain commands will require expert mode accessible.
+CheckPoint GaiaOS driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library.<br> 
+Certain commands will require expert password.
 
 ## install
  
@@ -18,6 +18,10 @@ we're preparing pypi deployment at the moment, meanwhile you can install testpac
     driver = get_network_driver('gaiaos')   
     device = driver('1.1.1.1', 'username', 'password', optional_args=optional_args)
     device.open()    
-    vals = device.get_users()
-    device.close()
+    vals = device.get_users()    
     print(vals)
+    vals = device.send_clish_cmd('show asset all')
+    print(vals)
+    vals = device.send_expert_cmd('uname -a')
+    print(vals)    
+    device.close()
