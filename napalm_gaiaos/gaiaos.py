@@ -21,6 +21,7 @@ class GaiaOSDriver(NetworkDriver):
         self.expert_password = secret
         self.timeout = timeout
         self.optional_args = optional_args
+        self.config_mode = 'clish'
 
     def open(self):
         device_type = 'checkpoint_gaia'
@@ -82,6 +83,23 @@ class GaiaOSDriver(NetworkDriver):
 
     def func(self):
         return 'im a Dummy'
+
+    def _enter_expert_mode(self) -> bool:
+        # --->enter func to verify new expert prompt
+        output = self.device.send_command_timing('expert')
+        if 'Enter expert password:' in output:
+            output += self.device.send_command_timing(self.expert_password)
+        else:
+            return False
+        return True
+
+    def _exit_expert_mode(self) -> bool:
+        # --->enter func to verify leave - check for clish prompt
+        if self.config_mode == 'expert':
+            self.device.send_command('exit')
+        else:
+            return False
+        return True
 
 if __name__ == '__main__':
     pass
