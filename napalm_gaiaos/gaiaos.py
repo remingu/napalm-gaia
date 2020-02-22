@@ -127,6 +127,9 @@ class GaiaOSDriver(NetworkDriver):
         pass
 
     def _enter_expert_mode(self) -> bool:
+        '''
+                    :return: bool
+        '''
         output = self.device.send_command_timing('expert')
         if 'Enter expert password:' in output:
             output += self.device.send_command_timing(self.expert_password)
@@ -138,6 +141,9 @@ class GaiaOSDriver(NetworkDriver):
             return False
 
     def _exit_expert_mode(self) -> bool:
+        '''
+                    :return: bool
+        '''
         if self._check_expert_mode == 'expert':
             self.device.send_command('exit')
         else:
@@ -145,6 +151,9 @@ class GaiaOSDriver(NetworkDriver):
         return True
 
     def _check_expert_mode(self) -> bool:
+        '''
+            :return: bool
+        '''
         ps = self.device.find_prompt()
         regex = r'\[Expert@[0-9a-zA-Z-_.].+[0-9]+.*#'
         if re.match(regex, ps):
