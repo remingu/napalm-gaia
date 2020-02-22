@@ -5,7 +5,7 @@ import napalm
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionException, SessionLockedException, \
                                    MergeConfigException, ReplaceConfigException,\
-                                   CommandErrorException
+                                   CommandErrorException, ConnectionClosedException
 
 
 class GaiaOSDriver(NetworkDriver):
@@ -36,7 +36,13 @@ class GaiaOSDriver(NetworkDriver):
         try:
             if isinstance(commands, list):
                 for cmd in commands:
-                    output[cmd] = self.device.send_command(cmd)
+                    if isinstance(cmd, str):
+                        output[cmd] = self.device.send_command(cmd)
+                    else:
+                        raise TypeError(
+                            'Expected <class \'str\'> not a {}'.format(
+                            type(cmd)
+                            ))
             else:
                 raise TypeError(
                     'Expected <class \'list\'> not a {}'.format(
@@ -161,6 +167,21 @@ class GaiaOSDriver(NetworkDriver):
             return True
         else:
             return False
+
+    def send_clish_cmd(self, cmd: str) -> list:
+        if isinstance(cmd, str):
+            if len(cmd) > 0:
+                self.device.find_prompt()
+                output = self.device.send_command(cmd)
+                output = str(output).split('\n')
+                return output
+            else:
+                raise TypeError('cmd: empty string - nothing to do')
+        else:
+            raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
+        return []
+
+
 
 
 if __name__ == '__main__':
