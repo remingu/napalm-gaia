@@ -126,9 +126,6 @@ class GaiaOSDriver(NetworkDriver):
     def get_interfaces_ip(self):
         pass
 
-    def func(self):
-        return 'im a Dummy'
-
     def _enter_expert_mode(self) -> bool:
         # --->enter func to verify expert prompt
         output = self.device.send_command_timing('expert')

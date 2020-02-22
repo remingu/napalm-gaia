@@ -15,8 +15,8 @@ If you're on *.deb based distributions you can use 'alien' to convert the rpm to
     
     
     driver = get_network_driver('gaiaos')   
-    device = driver('1.1.1.1', 'username', 'password')
+    device = driver('1.1.1.1', 'username', 'password', )
     device.open()    
-    vals = device.func()
+    vals = device.get_users()
     device.close()
     print(vals)
