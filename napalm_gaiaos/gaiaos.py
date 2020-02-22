@@ -130,7 +130,7 @@ class GaiaOSDriver(NetworkDriver):
 
     def _enter_expert_mode(self) -> bool:
         '''
-                    :return: bool
+            :return: bool
         '''
         output = self.device.send_command_timing('expert')
         if 'Enter expert password:' in output:
@@ -144,7 +144,7 @@ class GaiaOSDriver(NetworkDriver):
 
     def _exit_expert_mode(self) -> bool:
         '''
-                    :return: bool
+            :return: bool
         '''
         if self._check_expert_mode == 'expert':
             self.device.send_command('exit')
