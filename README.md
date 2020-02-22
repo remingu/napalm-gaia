@@ -15,7 +15,7 @@ we're preparing pypi deployment at the moment, meanwhile you can install testpac
     
     
     driver = get_network_driver('gaiaos')   
-    device = driver('1.1.1.1', 'username', 'password', )
+    device = driver('1.1.1.1', 'username', 'password', 'expert-password')
     device.open()    
     vals = device.get_users()
     device.close()
