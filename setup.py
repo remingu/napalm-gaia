@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='napalm-gaia',
-    version='0.0.1b',
+    version='0.0.1b1',
     packages=['napalm_gaiaos', 'napalm_gaiaos.helper'],
     url='',
     license='',
