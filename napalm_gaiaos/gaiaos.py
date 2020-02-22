@@ -66,7 +66,33 @@ class GaiaOSDriver(NetworkDriver):
         return users
 
     def get_arp_table(self, vrf=''):
-        pass
+        """
+                Get arp table information.
+                Return a list of dictionaries having the following set of keys:
+                    * interface (string)
+                    * mac (string)
+                    * ip (string)
+                    * age (float)
+                For example::
+                    [
+                        {
+                            'interface' : 'eth0',
+                            'mac'       : '5c:5e:ab:da:3c:f0',
+                            'ip'        : '172.17.17.1',
+                            'age'       : 0.0
+                        },
+                        {
+                            'interface': 'eth0',
+                            'mac'       : '66:0e:94:96:e0:ff',
+                            'ip'        : '172.17.17.2',
+                            'age'       : 0.0
+                        }
+                    ]
+                """
+        arptable_regex = ()
+        commands = 'ip -statistics show'
+
+
 
     def get_config(self, retrieve='all', full=False):
         pass
