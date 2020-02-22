@@ -209,5 +209,5 @@ class GaiaOSDriver(NetworkDriver):
             raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
 
 
-if __name__ == '__main__':''
+if __name__ == '__main__':
     pass
