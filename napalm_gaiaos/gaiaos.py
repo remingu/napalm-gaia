@@ -145,7 +145,7 @@ class GaiaOSDriver(NetworkDriver):
         if self._check_expert_mode() is True:
             return True
         else:
-            return False
+            raise RuntimeError('unable to enter expert mode')
 
     def _exit_expert_mode(self) -> bool:
         '''
@@ -186,9 +186,28 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
 
+    def send_expert_cmd(self, cmd: str) -> list:
+        output = []
+        if isinstance(cmd, str):
+            if len(cmd) > 0:
+                try:
+                    self.device.find_prompt()
+                    while self._check_expert_mode() is False:
+                        if self._enter_expert_mode() is True:
+                            output = self.device.send_command(cmd)
+                            self._exit_expert_mode()
+                except (socket.error, EOFError) as e:
+                    raise ConnectionClosedException(str(e))
+                try:
+                    output = str(output).split('\n')
+                    return output
+                except Exception as e:
+                    raise ValueError(e)
+            else:
+                raise ValueError('cmd: empty string - nothing to do')
+        else:
+            raise TypeError('Expected <class \'str\'> not a {}'.format(type(cmd)))
 
 
-
-
-if __name__ == '__main__':
+if __name__ == '__main__':''
     pass
