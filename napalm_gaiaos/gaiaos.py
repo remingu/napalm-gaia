@@ -37,7 +37,7 @@ class GaiaOSDriver(NetworkDriver):
                     output[cmd] = self.device.send_command(cmd)
             else:
                 raise TypeError(
-                    'Expected <class 'list'> not a {}'.format(
+                    'Expected <class \'list\'> not a {}'.format(
                         type(commands)
                         )
                     )

@@ -1,10 +1,10 @@
-from setuptools import setup
+from distutils.core import setup
 
 setup(
     name='napalm-gaia',
-    version='0.0.1',
+    version='0.0.1a',
     packages=['napalm_gaiaos', 'napalm_gaiaos.helper'],
-    url='https://github.com/remingu/napalm-gaia/',
+    url='',
     license='',
     author='remingu, mbtathcx',
     author_email='',
