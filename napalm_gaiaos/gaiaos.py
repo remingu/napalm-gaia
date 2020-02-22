@@ -114,10 +114,6 @@ class GaiaOSDriver(NetworkDriver):
                                    )
         return arp_entries
 
-
-
-
-
     def get_config(self, retrieve='all', full=False):
         pass
 
