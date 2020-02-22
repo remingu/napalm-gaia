@@ -145,7 +145,7 @@ class GaiaOSDriver(NetworkDriver):
         '''
             :return: bool
         '''
-        if self._check_expert_mode == 'expert':
+        if self._check_expert_mode() is True:
             self.device.send_command('exit')
         else:
             return False
