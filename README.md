@@ -7,8 +7,9 @@ Certain commands will require expert password.
  
 we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install or rpm/dpkg.<br>
 
+# documentation
 
-
+The issue is known. scnr
 
 ## simple test
     #!/usr/bin/env python3
@@ -25,3 +26,4 @@ we're preparing pypi deployment at the moment, meanwhile you can install testpac
     vals = device.send_expert_cmd('uname -a')
     print(vals)    
     device.close()
+    
