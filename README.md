@@ -13,10 +13,10 @@ The issue is known. scnr
 
 ## simple test
     #!/usr/bin/env python3
-    from napalm import get_network_driver
+    from napalm import get_network_driver    
     
-    optional_args = {'secret': 'expert-password'}
     driver = get_network_driver('gaiaos')   
+    optional_args = {'secret': 'expert-password'}
     device = driver('1.1.1.1', 'username', 'password', optional_args=optional_args)
     device.open()    
     vals = device.get_users()    
