@@ -133,11 +133,11 @@ class GaiaOSDriver(NetworkDriver):
         pass
 
     def get_interfaces(self):
+        interface_table = {}
         """
         Get interface details.
             last_flapped is not implemented
-        Example
-        Output:
+        Example Output:
         {u'Vlan1': {'description': u'N/A',
                     'is_enabled': True,
                     'is_up': True,
@@ -157,7 +157,23 @@ class GaiaOSDriver(NetworkDriver):
                       'mac_address': u'a493.4cc1.67a7',
                       'speed': 100}}
         """
+        try:
+            output = self.device.send_command_timing('show interfaces\t')
+            interface_list = output.split()
+            time.sleep(0.2)
+            for interface in interface_list:
+                interface_table[interface] = {}
+                output = self.device.send_command(r'show interface {0}'.format(interface))
+                output = output.split('\n')
+                for item in output:
+                    if re.search(r'^state.*', item):
+                        if item.split()[1] == 'on':
+                            interface_table[interface]['is_enabled'] = True
+                        else:
+                            interface_table[interface]['is_enabled'] = False
 
+        except:
+            pass
 
 
 
@@ -243,4 +259,4 @@ class GaiaOSDriver(NetworkDriver):
 
 
 if __name__ == '__main__':
-pass
+    pass
