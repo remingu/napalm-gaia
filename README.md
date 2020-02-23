@@ -1,7 +1,7 @@
 # napalm-gaia
 
 CheckPoint GaiaOS driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library.<br> 
-Certain commands will require expert password.
+Certain commands will require expert password. 
 
 ## install
  
@@ -10,6 +10,7 @@ we're preparing pypi deployment at the moment, meanwhile you can install testpac
 ## documentation
 
 The issue is known. scnr
+it will come
 
 ## simple test
     #!/usr/bin/env python3
