@@ -9,7 +9,7 @@ we're preparing pypi deployment at the moment, meanwhile you can install testpac
 
 ## documentation
 
-The issue is known. scnr
+The issue is known. scnr<br>
 it will come
 
 ## simple test
