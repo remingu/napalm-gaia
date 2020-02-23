@@ -111,6 +111,7 @@ class GaiaOSDriver(NetworkDriver):
 
 
     def _check_expert_mode(self) -> bool:
+        # will break if PS1 is altered - not everything possible should be done......
         rhostname = self.device.find_prompt()
         regex = r'\[Expert@.*$'
         if re.search(regex, rhostname):
