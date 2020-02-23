@@ -2,6 +2,7 @@ import logging
 import time
 import re
 import socket
+import ipaddress
 import napalm
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionException, SessionLockedException, \
@@ -191,18 +192,55 @@ class GaiaOSDriver(NetworkDriver):
                                 interface_table[interface][command_options[cmd]] = True
                         elif cmd == 'mac-addr':
                             if re.search(r'[0-9a-f:]+', output[1]) :
-                                interface_table[interface][command_options[cmd]] = output[1].encode('utf-8')
+                                interface_table[interface][command_options[cmd]] = output[1]
                             else:
                                 interface_table[interface][command_options[cmd]] = u'not configured'
                         elif cmd == 'comments':
-                            interface_table[interface][command_options[cmd]] = output[1].encode('utf-8')
+                            interface_table[interface][command_options[cmd]] = output[1]
 
         except:
             pass
         return interface_table
 
     def get_interfaces_ip(self):
-        pass
+        """
+                Get interface ip details.
+                Returns a dict of dicts
+                Example Output:
+                {   u'FastEthernet8': {   'ipv4': {   u'10.66.43.169': {   'prefix_length': 22}}},
+                    u'Loopback555': {   'ipv4': {   u'192.168.1.1': {   'prefix_length': 24}},
+                                        'ipv6': {   u'1::1': {   'prefix_length': 64},
+                                                    u'2001:DB8:1::1': {   'prefix_length': 64},
+                                                    u'2::': {   'prefix_length': 64},
+                                                    u'FE80::3': {   'prefix_length': 10}}},
+                    u'Tunnel0': {   'ipv4': {   u'10.63.100.9': {   'prefix_length': 24}}},
+                    u'Tunnel1': {   'ipv4': {   u'10.63.101.9': {   'prefix_length': 24}}},
+                    u'Vlan100': {   'ipv4': {   u'10.40.0.1': {   'prefix_length': 24},
+                                                u'10.41.0.1': {   'prefix_length': 24},
+                                                u'10.65.0.1': {   'prefix_length': 24}}},
+                    u'Vlan200': {   'ipv4': {   u'10.63.176.57': {   'prefix_length': 29}}}}
+                """
+        command_options = {'ipv4-address': 'ipv4', 'ipv6-address': 'ipv6'}
+        interface_table = {}
+        try:
+            output = self.device.send_command_timing('show interfaces\t')
+            interface_list = str(output).split()
+            for interface in interface_list:
+                interface_table[interface] = {}
+                for option in command_options:
+                    output = self.device.send_command(r'show interface {0} {1}'.format(interface, option))
+                    tmpstr = re.match('{0}\s(.*)/(.*)'.format(option), output)
+                    if tmpstr is not None:
+                        if ipaddress.ip_address(tmpstr.group(1)):
+                            addr = str(tmpstr.group(1))
+
+                            prefix = int(tmpstr.group(2))
+                            interface_table[interface][command_options[option]] = {}
+                            interface_table[interface][command_options[option]][addr] = {'prefix_length': prefix}
+
+        except Exception as e:
+            raise Exception(e)
+        return interface_table
 
     def _enter_expert_mode(self) -> bool:
         '''
