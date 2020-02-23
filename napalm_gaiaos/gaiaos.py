@@ -76,7 +76,7 @@ class GaiaOSDriver(NetworkDriver):
 
     def get_arp_table(self, vrf='') -> list:
         """
-                        Get arp table information.
+                        Get arp table information. (requires expertmode available)
                         Return a list of dictionaries having the following set of keys:
                             * interface (string)
                             * mac (string)
