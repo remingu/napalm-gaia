@@ -97,12 +97,8 @@ class GaiaOSDriver(NetworkDriver):
         output = self.device.send_command_timing('expert')
         if 'Enter expert password:' in output:
             output += self.device.send_command_timing(self.expert_password)
-        else:
-            return False
-        if self._check_expert_mode() is True:
-            return True
-        else:
-            return False
+        return self._check_expert_mode()
+
 
 
     def _exit_expert_mode(self):
