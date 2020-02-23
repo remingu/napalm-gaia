@@ -142,10 +142,13 @@ class GaiaOSDriver(NetworkDriver):
 
 
     def send_expert_cmd(self, cmd: str) -> str:
-        self._enter_expert_mode()
-        output = self.device.send_command(cmd)
-        self._exit_expert_mode()
-        return output
+        if self._enter_expert_mode() is True:
+            output = self.device.send_command(cmd)
+            self._exit_expert_mode()
+            return output
+        else:
+            raise RuntimeError('unable to enter expert mode')
+
 
 
 if __name__ == '__main__':
