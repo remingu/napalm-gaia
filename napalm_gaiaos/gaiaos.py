@@ -138,24 +138,24 @@ class GaiaOSDriver(NetworkDriver):
             last_flapped is not implemented
             for virtual interfaces speed will return 0
         Example Output:
-        {u'Vlan1': {'description': u'N/A',
-                    'is_enabled': True,
-                    'is_up': True,
-                    'last_flapped': -1.0,
-                    'mac_address': u'a493.4cc1.67a7',
-                    'speed': 100},
-         u'Vlan100': {'description': u'Data Network',
-                      'is_enabled': True,
-                      'is_up': True,
-                      'last_flapped': -1.0,
-                      'mac_address': u'a493.4cc1.67a7',
-                      'speed': 100},
-         u'Vlan200': {'description': u'Voice Network',
-                      'is_enabled': True,
-                      'is_up': True,
-                      'last_flapped': -1.0,
-                      'mac_address': u'a493.4cc1.67a7',
-                      'speed': 100}}
+            {u'Vlan1': {'description': u'N/A',
+                        'is_enabled': True,
+                        'is_up': True,
+                        'last_flapped': -1.0,
+                        'mac_address': u'a493.4cc1.67a7',
+                        'speed': 100},
+             u'Vlan100': {'description': u'Data Network',
+                          'is_enabled': True,
+                          'is_up': True,
+                          'last_flapped': -1.0,
+                          'mac_address': u'a493.4cc1.67a7',
+                          'speed': 100},
+             u'Vlan200': {'description': u'Voice Network',
+                          'is_enabled': True,
+                          'is_up': True,
+                          'last_flapped': -1.0,
+                          'mac_address': u'a493.4cc1.67a7',
+                          'speed': 100}}
         """
         command_options = {'state': 'is_enabled',
                            'comments': 'description',
@@ -201,25 +201,8 @@ class GaiaOSDriver(NetworkDriver):
             pass
         return interface_table
 
-
     def get_interfaces_ip(self):
-        """
-                Get interface ip details.
-                Returns a dict of dicts
-                Example Output:
-                {   u'FastEthernet8': {   'ipv4': {   u'10.66.43.169': {   'prefix_length': 22}}},
-                    u'Loopback555': {   'ipv4': {   u'192.168.1.1': {   'prefix_length': 24}},
-                                        'ipv6': {   u'1::1': {   'prefix_length': 64},
-                                                    u'2001:DB8:1::1': {   'prefix_length': 64},
-                                                    u'2::': {   'prefix_length': 64},
-                                                    u'FE80::3': {   'prefix_length': 10}}},
-                    u'Tunnel0': {   'ipv4': {   u'10.63.100.9': {   'prefix_length': 24}}},
-                    u'Tunnel1': {   'ipv4': {   u'10.63.101.9': {   'prefix_length': 24}}},
-                    u'Vlan100': {   'ipv4': {   u'10.40.0.1': {   'prefix_length': 24},
-                                                u'10.41.0.1': {   'prefix_length': 24},
-                                                u'10.65.0.1': {   'prefix_length': 24}}},
-                    u'Vlan200': {   'ipv4': {   u'10.63.176.57': {   'prefix_length': 29}}}}
-                """
+        pass
 
     def _enter_expert_mode(self) -> bool:
         '''
@@ -236,7 +219,6 @@ class GaiaOSDriver(NetworkDriver):
             return self._check_expert_mode()
         except Exception as e:
             raise RuntimeError(e)
-
 
 
     def _exit_expert_mode(self) -> bool:
@@ -257,7 +239,6 @@ class GaiaOSDriver(NetworkDriver):
         except Exception as e:
             raise RuntimeError(e)
 
-
     def _check_expert_mode(self) -> bool:
         # will break if PS1 is altered - not everything possible should be done......
         rhostname = self.device.find_prompt()
@@ -267,11 +248,9 @@ class GaiaOSDriver(NetworkDriver):
         else:
             return False
 
-
     def send_clish_cmd(self, cmd: str) -> list:
         output = self.device.send_command(cmd)
         return output
-
 
     def send_expert_cmd(self, cmd: str) -> str:
         if self._enter_expert_mode() is True:
