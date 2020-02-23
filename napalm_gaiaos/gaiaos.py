@@ -132,8 +132,74 @@ class GaiaOSDriver(NetworkDriver):
     def get_facts(self):
         pass
 
-    def get_interfaces(self):
-        pass
+    def get_interfaces(self) -> dict:
+        """
+        Get interface details.
+            last_flapped is not implemented
+            for virtual interfaces speed will return 0
+        Example Output:
+            {u'Vlan1': {'description': u'N/A',
+                        'is_enabled': True,
+                        'is_up': True,
+                        'last_flapped': -1.0,
+                        'mac_address': u'a493.4cc1.67a7',
+                        'speed': 100},
+             u'Vlan100': {'description': u'Data Network',
+                          'is_enabled': True,
+                          'is_up': True,
+                          'last_flapped': -1.0,
+                          'mac_address': u'a493.4cc1.67a7',
+                          'speed': 100},
+             u'Vlan200': {'description': u'Voice Network',
+                          'is_enabled': True,
+                          'is_up': True,
+                          'last_flapped': -1.0,
+                          'mac_address': u'a493.4cc1.67a7',
+                          'speed': 100}}
+        """
+        command_options = {'state': 'is_enabled',
+                           'comments': 'description',
+                           'speed': 'speed',
+                           'link-state': 'is_up',
+                           'mac-addr': 'mac_address'}
+        interface_table = {}
+        try:
+            output = self.device.send_command_timing('show interfaces\t')
+            interface_list = output.split()
+            time.sleep(0.2)
+
+            for interface in interface_list:
+                interface_table[interface] = {}
+                interface_table[interface]['last_flapped'] = -1.0
+                for cmd in command_options:
+                    output = self.device.send_command(r'show interface {0} {1}'.format(interface, cmd)).split()
+                    if len(output) == 1:
+                        interface_table[interface][command_options[cmd]] = u''
+                    else:
+                        if cmd == 'speed':
+                            if re.search(r'(\d+)(\D)', output[1]):
+                                tmpstr = re.match(r'(\d+)(\D)', output[1])
+                                interface_table[interface][command_options[cmd]] = tmpstr.group(1)
+                            else:
+                                interface_table[interface][command_options[cmd]] = 0
+                        elif cmd == 'link-state' or cmd == 'state':
+                            if output[1] == 'on':
+                                interface_table[interface][command_options[cmd]] = True
+                            elif output[1] == 'off':
+                                interface_table[interface][command_options[cmd]] = False
+                            else:
+                                interface_table[interface][command_options[cmd]] = True
+                        elif cmd == 'mac-addr':
+                            if re.search(r'[0-9a-f:]+', output[1]) :
+                                interface_table[interface][command_options[cmd]] = output[1].encode('utf-8')
+                            else:
+                                interface_table[interface][command_options[cmd]] = u'not configured'
+                        elif cmd == 'comments':
+                            interface_table[interface][command_options[cmd]] = output[1].encode('utf-8')
+
+        except:
+            pass
+        return interface_table
 
     def get_interfaces_ip(self):
         pass
@@ -155,7 +221,6 @@ class GaiaOSDriver(NetworkDriver):
             raise RuntimeError(e)
 
 
-
     def _exit_expert_mode(self) -> bool:
         '''
             :return: bool
@@ -174,7 +239,6 @@ class GaiaOSDriver(NetworkDriver):
         except Exception as e:
             raise RuntimeError(e)
 
-
     def _check_expert_mode(self) -> bool:
         # will break if PS1 is altered - not everything possible should be done......
         rhostname = self.device.find_prompt()
@@ -184,11 +248,9 @@ class GaiaOSDriver(NetworkDriver):
         else:
             return False
 
-
     def send_clish_cmd(self, cmd: str) -> list:
         output = self.device.send_command(cmd)
         return output
-
 
     def send_expert_cmd(self, cmd: str) -> str:
         if self._enter_expert_mode() is True:
