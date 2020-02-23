@@ -2,6 +2,7 @@ import logging
 import time
 import re
 import socket
+import ipaddress
 import napalm
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionException, SessionLockedException, \
@@ -191,11 +192,11 @@ class GaiaOSDriver(NetworkDriver):
                                 interface_table[interface][command_options[cmd]] = True
                         elif cmd == 'mac-addr':
                             if re.search(r'[0-9a-f:]+', output[1]) :
-                                interface_table[interface][command_options[cmd]] = output[1].encode('utf-8')
+                                interface_table[interface][command_options[cmd]] = output[1]
                             else:
                                 interface_table[interface][command_options[cmd]] = u'not configured'
                         elif cmd == 'comments':
-                            interface_table[interface][command_options[cmd]] = output[1].encode('utf-8')
+                            interface_table[interface][command_options[cmd]] = output[1]
 
         except:
             pass
@@ -227,10 +228,19 @@ class GaiaOSDriver(NetworkDriver):
             for interface in interface_list:
                 interface_table[interface] = {}
                 for option in command_options:
-                    interface_table[interface]
+                    output = self.device.send_command(r'show interface {0} {1}'.format(interface, option))
+                    tmpstr = re.match('{0}\s(.*)/(.*)'.format(option), output)
+                    if tmpstr is not None:
+                        if ipaddress.ip_address(tmpstr.group(1)):
+                            addr = str(tmpstr.group(1))
 
-        except:
-            pass
+                            prefix = int(tmpstr.group(2))
+                            interface_table[interface][command_options[option]] = {}
+                            interface_table[interface][command_options[option]][addr] = {'prefix_length': prefix}
+
+        except Exception as e:
+            raise Exception(e)
+        return interface_table
 
     def _enter_expert_mode(self) -> bool:
         '''
