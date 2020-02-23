@@ -227,7 +227,7 @@ class GaiaOSDriver(NetworkDriver):
             for interface in interface_list:
                 interface_table[interface] = {}
                 for option in command_options:
-                    interface_table[interface]8
+                    interface_table[interface]
 
         except:
             pass
