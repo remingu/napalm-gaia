@@ -202,7 +202,35 @@ class GaiaOSDriver(NetworkDriver):
         return interface_table
 
     def get_interfaces_ip(self):
-        pass
+        """
+                Get interface ip details.
+                Returns a dict of dicts
+                Example Output:
+                {   u'FastEthernet8': {   'ipv4': {   u'10.66.43.169': {   'prefix_length': 22}}},
+                    u'Loopback555': {   'ipv4': {   u'192.168.1.1': {   'prefix_length': 24}},
+                                        'ipv6': {   u'1::1': {   'prefix_length': 64},
+                                                    u'2001:DB8:1::1': {   'prefix_length': 64},
+                                                    u'2::': {   'prefix_length': 64},
+                                                    u'FE80::3': {   'prefix_length': 10}}},
+                    u'Tunnel0': {   'ipv4': {   u'10.63.100.9': {   'prefix_length': 24}}},
+                    u'Tunnel1': {   'ipv4': {   u'10.63.101.9': {   'prefix_length': 24}}},
+                    u'Vlan100': {   'ipv4': {   u'10.40.0.1': {   'prefix_length': 24},
+                                                u'10.41.0.1': {   'prefix_length': 24},
+                                                u'10.65.0.1': {   'prefix_length': 24}}},
+                    u'Vlan200': {   'ipv4': {   u'10.63.176.57': {   'prefix_length': 29}}}}
+                """
+        command_options = {'ipv4-address': 'ipv4', 'ipv6-address': 'ipv6'}
+        interface_table = {}
+        try:
+            output = self.device.send_command_timing('show interfaces\t')
+            interface_list = str(output).split()
+            for interface in interface_list:
+                interface_table[interface] = {}
+                for option in command_options:
+                    interface_table[interface]8
+
+        except:
+            pass
 
     def _enter_expert_mode(self) -> bool:
         '''
