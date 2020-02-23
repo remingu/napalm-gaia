@@ -132,7 +132,7 @@ class GaiaOSDriver(NetworkDriver):
     def get_facts(self):
         pass
 
-    def get_interfaces(self):
+    def get_interfaces(self) -> dict:
         """
         Get interface details.
             last_flapped is not implemented
