@@ -144,25 +144,29 @@ class GaiaOSDriver(NetworkDriver):
                         'is_up': True,
                         'last_flapped': -1.0,
                         'mac_address': u'a493.4cc1.67a7',
-                        'speed': 100},
+                        'speed': 100,
+                        'mtu': 1500},
              u'Vlan100': {'description': u'Data Network',
                           'is_enabled': True,
                           'is_up': True,
                           'last_flapped': -1.0,
                           'mac_address': u'a493.4cc1.67a7',
-                          'speed': 100},
+                          'speed': 100,
+                          'mtu': 65536},
              u'Vlan200': {'description': u'Voice Network',
                           'is_enabled': True,
                           'is_up': True,
                           'last_flapped': -1.0,
                           'mac_address': u'a493.4cc1.67a7',
-                          'speed': 100}}
+                          'speed': 100,
+                          'mtu': 1500}}
         """
         command_options = {'state': 'is_enabled',
                            'comments': 'description',
                            'speed': 'speed',
                            'link-state': 'is_up',
-                           'mac-addr': 'mac_address'}
+                           'mac-addr': 'mac_address',
+                           'mtu': 'mtu'}
         interface_table = {}
         try:
             output = self.device.send_command_timing('show interfaces\t')
@@ -196,6 +200,8 @@ class GaiaOSDriver(NetworkDriver):
                             else:
                                 interface_table[interface][command_options[cmd]] = u'not configured'
                         elif cmd == 'comments':
+                            interface_table[interface][command_options[cmd]] = output[1]
+                        elif cmd == 'mtu':
                             interface_table[interface][command_options[cmd]] = output[1]
 
         except:
