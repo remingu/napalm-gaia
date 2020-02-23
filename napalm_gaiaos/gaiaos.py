@@ -133,10 +133,10 @@ class GaiaOSDriver(NetworkDriver):
         pass
 
     def get_interfaces(self):
-        interface_table = {}
         """
         Get interface details.
             last_flapped is not implemented
+            for virtual interfaces speed will return 0
         Example Output:
         {u'Vlan1': {'description': u'N/A',
                     'is_enabled': True,
@@ -157,24 +157,29 @@ class GaiaOSDriver(NetworkDriver):
                       'mac_address': u'a493.4cc1.67a7',
                       'speed': 100}}
         """
+        command_options = {'state': 'is_enabled',
+                           'comments': 'description',
+                           'speed': 'speed',
+                           'link-state': 'is_up',
+                           'mac-addr': 'mac_address'}
+        interface_table = {}
         try:
             output = self.device.send_command_timing('show interfaces\t')
             interface_list = output.split()
             time.sleep(0.2)
+
             for interface in interface_list:
                 interface_table[interface] = {}
-                output = self.device.send_command(r'show interface {0}'.format(interface))
-                output = output.split('\n')
-                for item in output:
-                    if re.search(r'^state.*', item):
-                        if item.split()[1] == 'on':
-                            interface_table[interface]['is_enabled'] = True
-                        else:
-                            interface_table[interface]['is_enabled'] = False
+                for cmd in command_options:
 
+                    output = self.device.send_command(r'show interface {0} {1}'.format(interface, cmd)).split()
+                    if len(output) == 1:
+                        interface_table[interface][command_options[cmd]] = ''
+                    else:
+                        interface_table[interface][command_options[cmd]] = output[1]
         except:
             pass
-
+        print(interface_table)
 
 
     def get_interfaces_ip(self):
