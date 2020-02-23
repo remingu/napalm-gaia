@@ -99,6 +99,7 @@ class GaiaOSDriver(NetworkDriver):
             if 'Enter expert password:' in output:
                 output += self.device.send_command_timing(self.expert_password)
                 time.sleep(1)
+                self.device.find_prompt()
                 self.device.send_command(r'unset TMOUT')
             return self._check_expert_mode()
         except Exception as e:
@@ -112,8 +113,13 @@ class GaiaOSDriver(NetworkDriver):
         '''
         try:
             if self._check_expert_mode() is True:
-                self.device.send_command(r'exit')
-                return True
+                self.device.send_command_timing(r'exit')
+                time.sleep(1)
+                self.device.find_prompt()
+                if self._check_expert_mode() is False:
+                    return True
+                else:
+                    return False
             else:
                 return False
         except Exception as e:
