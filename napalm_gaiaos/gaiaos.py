@@ -93,13 +93,16 @@ class GaiaOSDriver(NetworkDriver):
         '''
             :return: bool
         '''
-        self.rhostname = self.device.find_prompt()
-        output = self.device.send_command_timing('expert')
-        if 'Enter expert password:' in output:
-            output += self.device.send_command_timing(self.expert_password)
-            self.tmout = self.device.send_command('echo $TMOUT')
-            self.device.send_command('unset TMOUT')
-        return self._check_expert_mode()
+        try:
+            self.rhostname = self.device.find_prompt()
+            output = self.device.send_command_timing('expert')
+            if 'Enter expert password:' in output:
+                output += self.device.send_command_timing(self.expert_password)
+                time.sleep(1)
+                self.device.send_command(r'unset TMOUT')
+            return self._check_expert_mode()
+        except Exception as e:
+            raise ConnectionException(e)
 
 
 
@@ -108,8 +111,9 @@ class GaiaOSDriver(NetworkDriver):
             :return: bool
         '''
         if self._check_expert_mode() is True:
-            self.device.send_command(r'export TMOUT={0}'.format(self.tmout))
-            self.device.send_command('exit')
+            self.device.send_command(r'exit')
+        else:
+            return False
 
 
     def _check_expert_mode(self) -> bool:
