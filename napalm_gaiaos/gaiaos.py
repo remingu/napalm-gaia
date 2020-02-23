@@ -1,4 +1,5 @@
 import logging
+import time
 import re
 import socket
 import napalm
@@ -92,6 +93,8 @@ class GaiaOSDriver(NetworkDriver):
         '''
             :return: bool
         '''
+        rhostname = self.device.find_prompt()
+        print(rhostname)
         output = self.device.send_command_timing('expert')
         if 'Enter expert password:' in output:
             output += self.device.send_command_timing(self.expert_password)
@@ -108,7 +111,13 @@ class GaiaOSDriver(NetworkDriver):
 
 
     def _check_expert_mode(self) -> bool:
-        pass
+        rhostname = self.device.find_prompt()
+        regex = r'\[Expert@.*$'
+        if re.search(regex, rhostname):
+            return True
+        else:
+            return False
+
 
     def send_clish_cmd(self, cmd: str) -> list:
         output = self.device.send_command(cmd)
