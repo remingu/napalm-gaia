@@ -102,7 +102,7 @@ class GaiaOSDriver(NetworkDriver):
                 self.device.send_command(r'unset TMOUT')
             return self._check_expert_mode()
         except Exception as e:
-            raise ConnectionException(e)
+            raise RuntimeError(e)
 
 
 
