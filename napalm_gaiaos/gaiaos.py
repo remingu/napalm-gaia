@@ -255,8 +255,7 @@ class GaiaOSDriver(NetworkDriver):
         '''
         try:
             if self._check_expert_mode() is False:
-                self.rhostname = self.device.find_prompt()
-
+                self.device.find_prompt()
                 output = self.device.send_command_timing('expert')
                 if 'Enter expert password:' in output:
                     output += self.device.send_command_timing(self.expert_password)
