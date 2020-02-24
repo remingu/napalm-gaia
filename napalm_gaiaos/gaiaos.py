@@ -57,6 +57,19 @@ class GaiaOSDriver(NetworkDriver):
             raise ConnectionClosedException(str(e))
     
     def get_users(self) -> dict:
+        """
+            Returns a dictionary with the configured users.
+            The keys of the main dictionary represents the username.
+            The values represent the details of the user,
+            represented by the following keys:
+    
+                * uid (int)
+                * gid (int)
+                * homedir (str)
+                * shell (str)
+                * name (str)
+                * privileges (str)
+        """
         username_regex = (
             r'^([A-z0-9_-]{1,32})\s+(\d+)\s+(\d+)\s+([/A-z0-9_-]{1,})\s+'
             r'([./A-z0-9_-]{1,})\s+((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-])\s+'
