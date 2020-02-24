@@ -345,6 +345,7 @@ class GaiaOSDriver(NetworkDriver):
                     command += ' -I {0}'.format(kwargs['source'])
             if 'ttl' in kwargs:
                 self._validate_ping_ttl(kwargs['ttl'])
+                command
 
             return command
 
@@ -364,14 +365,12 @@ class GaiaOSDriver(NetworkDriver):
             allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
             return all(allowed.match(label) for label in labels)
 
-    def _validate_ping_source(self, source: str) -> bool:
+    def _validate_ping_source(self, source: str):
         source_interfaces = []
         try:
             output = self.device.send_command_timing('show interfaces\t')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-        except Exception as e:
-            raise RuntimeError(e)
         interface_list = output.split()
         for interface in interface_list:
             output = self.device.send_command('show interface {0} ipv4-address'.format(interface))
@@ -379,14 +378,13 @@ class GaiaOSDriver(NetworkDriver):
             if mobj is not None:
                 source_interfaces.append(mobj.group(1))
             source_interfaces.append(interface)
-        if source in source_interfaces:
-            return True
-        else:
-            return False
+        if source not in source_interfaces:
+            raise ValueError('invalid source')
+
 
     def _validate_ping_ttl(self, ttl) -> None:
         if isinstance(ttl, int):
-            if int(ttl) <= 0 or int(ttl) < 256:
+            if int(ttl) <= 0 or int(ttl) > 256:
                 raise ValueError('invalid ttl')
         elif isinstance(ttl, str):
             if int(ttl) <= 0 or int(ttl) > 255:
