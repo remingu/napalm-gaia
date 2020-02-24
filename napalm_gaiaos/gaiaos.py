@@ -403,7 +403,7 @@ class GaiaOSDriver(NetworkDriver):
     def _validate_ping_size(self, size: int) -> None:
         if isinstance(size, int):
             if size < 1 or size > 65507:
-                raise ValueError('invalid size - value out of range <1-255>')
+                raise ValueError('invalid size - value out of range <1-65507>')
         else:
             raise TypeError('Expected <class \'int\'> not a {}'.format(type(size)))
 
