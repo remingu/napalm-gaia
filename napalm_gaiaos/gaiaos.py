@@ -358,16 +358,43 @@ class GaiaOSDriver(NetworkDriver):
             output = self.device.send_command(command, delay_factor=10)
             output = str(output).split('\n')
             values = []
-            re_output_ge_1ms = r'(\d+).*time=(.*)\sms'
-            re_output_le_1ms = r'.*ttl=\d+$'
+            re_output_rtt = r'(\d+).*time=(.*)\sms'
+            re_output_rtt_unreachable = r'(.*[Uu]nreachable)'
             re_stats_overview = r'2 packets transmitted, 2 received, 0% packet loss, time 1003ms'
-            re_stats_overview = r'2 packets transmitted, 2 received, 0% packet loss, time 1003ms'
-            re_stats_rtt = 'rtt min/avg/max/mdev = 2.597/2.898/3.200/0.306 ms'
-            print(output)
-            print(output[-1])
-            print(command)
 
-            return []
+            re_stats_rtt = '.*=\s(.*)/(.*)/(.*)/(.*)\sms'
+            re_unreachable = r'.*100%\spacket\sloss.*'
+            mobj = re.match(re_unreachable, output[-2])
+            packets_sent = 0
+            packets_lost = 0
+            if mobj is not None:
+                return {'error': 'unknown host {0}'.format(destination)}
+            else:
+                for line in output:
+                    mobj = re.match(re_output_rtt, line)
+                    if mobj is not None:
+                        val = float(mobj.group(2))
+                        values.append({ 'ip-address': destination, 'rtt': val})
+                        packets_sent += 1
+                    mobj = re.match(re_output_rtt_unreachable, line)
+                    if mobj is not None:
+                        values.append({'ip-address': destination, 'rtt': None})
+                        packets_sent += 1
+                        packets_lost += 1
+                response = {}
+                response['success'] = {}
+                response['success']['results'] = []
+                packets = re.match(re_stats_overview, output[-2])
+                rttstats = re.match(re_stats_rtt, output[-1])
+                response = { 'probes_sent': packets_sent,
+                    'packet_loss': packets_lost,
+                    'rtt_min': rttstats.group(1),
+                    'rtt_max': rttstats.group(3),
+                    'rtt_avg': rttstats.group(2),
+                    'rtt_stddev': rttstats.group(4),
+                    'results' : values
+                }
+                return response
         else:
             raise ValueError('invalid host format')
 
