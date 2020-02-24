@@ -127,7 +127,7 @@ class GaiaOSDriver(NetworkDriver):
             output = self.device.send_command(command)
             self._exit_expert_mode()
         else:
-            raise RuntimeError('unable to enter expertmode')
+            raise RuntimeError('unable to enter expert-mode')
         output = str(output).split('\n')
         for line in output:
             if re.match(arptable_regex, line):
@@ -139,6 +139,9 @@ class GaiaOSDriver(NetworkDriver):
                                     'state': str(table_entry.group(5))}
                                    )
         return arp_entries
+
+    def get_route_to(self, **kwargs):
+        pass
 
     def get_config(self, retrieve='all', full=False):
         pass
@@ -443,7 +446,6 @@ class GaiaOSDriver(NetworkDriver):
             allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
             if all(allowed.match(label) for label in labels) is False:
                 raise ValueError('invalid destination')
-
 
     def _validate_ping_source(self, source: str):
         source_interfaces = []
