@@ -106,7 +106,6 @@ class GaiaOSDriver(NetworkDriver):
                         """
         arptable_regex = ()
         commands = 'ip -statistics show'
-
         arptable_regex = r'^([0-9.:a-f]+)\sdev\s([a-zA-Z0-9._-]+)\slladdr\s([0-9a-f:]+)\s' \
                          r'ref\s[0-9]+\sused\s([0-9]+).*probes\s[0-9]+\s([a-zA-Z]+)*$'
         command = 'ip -stat neigh'
@@ -263,6 +262,8 @@ class GaiaOSDriver(NetworkDriver):
                     self.device.find_prompt()
                     self.device.send_command(r'unset TMOUT')
             return self._check_expert_mode()
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
         except Exception as e:
             raise RuntimeError(e)
 
@@ -282,17 +283,22 @@ class GaiaOSDriver(NetworkDriver):
                     return False
             else:
                 return True
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
         except Exception as e:
             raise RuntimeError(e)
 
     def _check_expert_mode(self) -> bool:
         # will break if PS1 is altered - not everything possible should be done......
-        rhostname = self.device.find_prompt()
-        regex = r'\[Expert@.*$'
-        if re.search(regex, rhostname):
-            return True
-        else:
-            return False
+        try:
+            rhostname = self.device.find_prompt()
+            regex = r'\[Expert@.*$'
+            if re.search(regex, rhostname):
+                return True
+            else:
+                return False
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
 
     def send_clish_cmd(self, cmd: str) -> list:
         output = self.device.send_command(cmd)
@@ -306,7 +312,14 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise RuntimeError('unable to enter expert mode')
 
+    def ping(self, destination, **kwargs):
+        if ipaddress.ip_address(destination):
+            try:
 
+
+                pass
+            except:
+                pass
 
 if __name__ == '__main__':
     pass
