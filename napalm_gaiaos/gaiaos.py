@@ -254,7 +254,7 @@ class GaiaOSDriver(NetworkDriver):
         '''
         try:
             if self._check_expert_mode() is False:
-                self.device.find_prompt()
+                self.device.send_command('\t')
                 output = self.device.send_command_timing('expert')
                 if 'Enter expert password:' in output:
                     output += self.device.send_command_timing(self.expert_password)
@@ -275,8 +275,8 @@ class GaiaOSDriver(NetworkDriver):
         try:
             if self._check_expert_mode() is True:
                 self.device.send_command_timing(r'exit')
-                time.sleep(1)
-                self.device.find_prompt()
+                time.sleep(0.5)
+                self.device.send_command('\t')
                 if self._check_expert_mode() is False:
                     return True
                 else:
@@ -325,7 +325,7 @@ class GaiaOSDriver(NetworkDriver):
             ttl: int =  0 < ttl < 256,
             timeout: None - Not Supported,
             size: int = 0 < size in bytes < 65507,
-            count: int = count > 0,
+            count: int = 0 < count <= 1000,
             vrf: None = VSX is not supported yet }
         :return: dict {
 
@@ -335,19 +335,27 @@ class GaiaOSDriver(NetworkDriver):
         }
         """
         try:
-            self.device.find_prompt()
+            self.device.send_command('\t')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-        if self._is_valid_hostname(destination) is True:
-            command = r'ping {0}'.format(destination)
-            if 'source' in kwargs:
-                if self._validate_ping_source(kwargs['source']) is True:
-                    command += ' -I {0}'.format(kwargs['source'])
-            if 'ttl' in kwargs:
-                self._validate_ping_ttl(kwargs['ttl'])
-                command
-
-            return command
+        self._is_valid_hostname(destination)
+        command = r'ping {0}'.format(destination)
+        if 'source' in kwargs:
+            self._validate_ping_source(kwargs['source'])
+            command += ' -I {0}'.format(kwargs['source'])
+        if 'ttl' in kwargs:
+            self._validate_ping_ttl(kwargs['ttl'])
+            command += ' -t {0}'.format(kwargs['ttl'])
+        if 'size' in kwargs:
+            self._validate_ping_size(kwargs['size'])
+            command += ' -s {0}'.format(kwargs['size'])
+        if 'count' in kwargs:
+            self._validate_ping_count(kwargs['count'])
+            command += ' -c {0}'.format(kwargs['count'])
+            output = self.device.send_command(command, delay_factor=10)
+        else:
+            output = self.device.send_command(command)
+        return command
 
     def _is_valid_hostname(self, hostname):
         if ipaddress.ip_address(hostname):
@@ -363,7 +371,9 @@ class GaiaOSDriver(NetworkDriver):
             if re.match(r"[0-9]+$", labels[-1]):
                 return False
             allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
-            return all(allowed.match(label) for label in labels)
+            if all(allowed.match(label) for label in labels) is False:
+                raise ValueError('invalid destination')
+
 
     def _validate_ping_source(self, source: str):
         source_interfaces = []
@@ -377,22 +387,32 @@ class GaiaOSDriver(NetworkDriver):
             mobj = re.match('.*ipv4-address\s*(.*)/.*', output)
             if mobj is not None:
                 source_interfaces.append(mobj.group(1))
+            output = self.device.send_command('show interface {0} ipv6-address'.format(interface))
+            mobj = re.match('.*ipv6-address\s*(.*)/.*', output)
             source_interfaces.append(interface)
         if source not in source_interfaces:
             raise ValueError('invalid source')
 
-
     def _validate_ping_ttl(self, ttl) -> None:
         if isinstance(ttl, int):
             if int(ttl) <= 0 or int(ttl) > 256:
-                raise ValueError('invalid ttl')
-        elif isinstance(ttl, str):
-            if int(ttl) <= 0 or int(ttl) > 255:
-                raise ValueError('invalid ttl')
+                raise ValueError('invalid ttl - value out of range <1-255>')
         else:
-            raise ValueError('invalid ttl')
+            raise TypeError('Expected <class \'int\'> not a {}'.format(type(ttl)))
 
+    def _validate_ping_size(self, size: int) -> None:
+        if isinstance(size, int):
+            if size < 1 or size > 65507:
+                raise ValueError('invalid size - value out of range <1-255>')
+        else:
+            raise TypeError('Expected <class \'int\'> not a {}'.format(type(size)))
 
+    def _validate_ping_count(self, count: int) -> None:
+        if isinstance(count, int):
+            if count < 1 or count > 1000:
+                raise ValueError('invalid count - value out of range <1-1000>')
+        else:
+            raise TypeError('Expected <class \'int\'> not a {}'.format(type(count)))
 
 if __name__ == '__main__':
     pass
