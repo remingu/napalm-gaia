@@ -1,4 +1,5 @@
 import logging
+import statistics
 import time
 import re
 import socket
@@ -119,7 +120,6 @@ class GaiaOSDriver(NetworkDriver):
                         """
         arptable_regex = ()
         commands = 'ip -statistics show'
-
         arptable_regex = r'^([0-9.:a-f]+)\sdev\s([a-zA-Z0-9._-]+)\slladdr\s([0-9a-f:]+)\s' \
                          r'ref\s[0-9]+\sused\s([0-9]+).*probes\s[0-9]+\s([a-zA-Z]+)*$'
         command = 'ip -stat neigh'
@@ -268,7 +268,7 @@ class GaiaOSDriver(NetworkDriver):
         '''
         try:
             if self._check_expert_mode() is False:
-                self.device.find_prompt()
+                self.device.send_command('\t')
                 output = self.device.send_command_timing('expert')
                 if 'Enter expert password:' in output:
                     output += self.device.send_command_timing(self.expert_password)
@@ -276,6 +276,8 @@ class GaiaOSDriver(NetworkDriver):
                     self.device.find_prompt()
                     self.device.send_command(r'unset TMOUT')
             return self._check_expert_mode()
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
         except Exception as e:
             raise RuntimeError(e)
 
@@ -287,29 +289,37 @@ class GaiaOSDriver(NetworkDriver):
         try:
             if self._check_expert_mode() is True:
                 self.device.send_command_timing(r'exit')
-                time.sleep(1)
-                self.device.find_prompt()
+                time.sleep(0.5)
+                self.device.send_command('\t')
                 if self._check_expert_mode() is False:
                     return True
                 else:
                     return False
             else:
                 return True
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
         except Exception as e:
             raise RuntimeError(e)
 
     def _check_expert_mode(self) -> bool:
         # will break if PS1 is altered - not everything possible should be done......
-        rhostname = self.device.find_prompt()
-        regex = r'\[Expert@.*$'
-        if re.search(regex, rhostname):
-            return True
-        else:
-            return False
+        try:
+            rhostname = self.device.find_prompt()
+            regex = r'\[Expert@.*$'
+            if re.search(regex, rhostname):
+                return True
+            else:
+                return False
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
 
     def send_clish_cmd(self, cmd: str) -> list:
-        output = self.device.send_command(cmd)
-        return output
+        try:
+            output = self.device.send_command(cmd)
+            return output
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
 
     def send_expert_cmd(self, cmd: str) -> str:
         if self._enter_expert_mode() is True:
@@ -319,7 +329,164 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise RuntimeError('unable to enter expert mode')
 
+    def ping(self, destination: str, **kwargs) -> dict:
+        """
+            ping destination from device
+            response times below 1ms will be treated as 1ms
+        :param destination: str
+        :param kwargs: dict {
+            source: str <interface|ip-address>,
+            ttl: int =  0 < ttl < 256,
+            timeout: None - Not Supported,
+            size: int = 7 < size in bytes < 65507,
+            count: int = 0 < count <= 1000,
+            vrf: None = VSX is not supported yet }
+        :return: dict {
+                    'success': {
+                        'probes_sent': 5,
+                        'packet_loss': 0,
+                        'rtt_min': 72.158,
+                        'rtt_max': 72.433,
+                        'rtt_avg': 72.268,
+                        'rtt_stddev': 0.094,
+                        'results': [
+                            {
+                                'ip_address': u'1.1.1.1',
+                                'rtt': 72.248
+                            },
+                            {
+                                'ip_address': '2.2.2.2',
+                                'rtt': 72.299
+                            }
+                        ]
+                    }
+                }
 
+            OR
+
+        {
+            'error': 'unknown host 8.8.8.8.8'
+        }
+
+        """
+        try:
+            self.device.send_command('\t')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        if self._is_valid_hostname(destination) is True:
+            command = r'ping {0}'.format(destination)
+            if 'source' in kwargs:
+                self._validate_ping_source(kwargs['source'])
+                command += ' -I {0}'.format(kwargs['source'])
+            if 'ttl' in kwargs:
+                self._validate_ping_ttl(kwargs['ttl'])
+                command += ' -t {0}'.format(kwargs['ttl'])
+            if 'size' in kwargs:
+                self._validate_ping_size(kwargs['size'])
+                command += ' -s {0}'.format(kwargs['size'])
+            if 'count' in kwargs:
+                self._validate_ping_count(kwargs['count'])
+                command += ' -c {0}'.format(kwargs['count'])
+            else:
+                command += ' -c 5'
+            output = self.device.send_command(command, delay_factor=10)
+            output = str(output).split('\n')
+            values = []
+            re_output_rtt = r'(\d+).*time=(.*)\sms'
+            re_output_rtt_unreachable = r'(.*[Uu]nreachable)'
+            re_stats_overview = r'2 packets transmitted, 2 received, 0% packet loss, time 1003ms'
+
+            re_stats_rtt = '.*=\s(.*)/(.*)/(.*)/(.*)\sms'
+            re_unreachable = r'.*100%\spacket\sloss.*'
+            mobj = re.match(re_unreachable, output[-2])
+            packets_sent = 0
+            packets_lost = 0
+            if mobj is not None:
+                return {'error': 'unknown host {0}'.format(destination)}
+            else:
+                for line in output:
+                    mobj = re.match(re_output_rtt, line)
+                    if mobj is not None:
+                        val = float(mobj.group(2))
+                        values.append({ 'ip-address': destination, 'rtt': val})
+                        packets_sent += 1
+                    mobj = re.match(re_output_rtt_unreachable, line)
+                    if mobj is not None:
+                        values.append({'ip-address': destination, 'rtt': None})
+                        packets_sent += 1
+                        packets_lost += 1
+                response = {}
+                response['success'] = {}
+                response['success']['results'] = []
+                rttstats = re.match(re_stats_rtt, output[-1])
+                response = { 'probes_sent': packets_sent,
+                    'packet_loss': packets_lost,
+                    'rtt_min': rttstats.group(1),
+                    'rtt_max': rttstats.group(3),
+                    'rtt_avg': rttstats.group(2),
+                    'rtt_stddev': rttstats.group(4),
+                    'results' : values
+                }
+                return response
+        else:
+            raise ValueError('invalid host format')
+
+    def _is_valid_hostname(self, hostname) -> bool:
+        if ipaddress.ip_address(hostname):
+            return True
+        else:
+            if hostname[-1] == ".":
+                # strip exactly one dot from the right, if present
+                hostname = hostname[:-1]
+            if len(hostname) > 253:
+                return False
+            labels = hostname.split(".")
+            # the TLD must be not all-numeric
+            if re.match(r"[0-9]+$", labels[-1]):
+                return False
+            allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
+            if all(allowed.match(label) for label in labels) is False:
+                raise ValueError('invalid destination')
+
+
+    def _validate_ping_source(self, source: str):
+        source_interfaces = []
+        try:
+            output = self.device.send_command_timing('show interfaces\t')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        interface_list = output.split()
+        for interface in interface_list:
+            output = self.device.send_command('show interface {0} ipv4-address'.format(interface))
+            mobj = re.match('.*ipv4-address\s*(.*)/.*', output)
+            if mobj is not None:
+                source_interfaces.append(mobj.group(1))
+            output = self.device.send_command('show interface {0} ipv6-address'.format(interface))
+            mobj = re.match('.*ipv6-address\s*(.*)/.*', output)
+            source_interfaces.append(interface)
+        if source not in source_interfaces:
+            raise ValueError('invalid source')
+
+    def _validate_ping_ttl(self, ttl) -> None:
+        if isinstance(ttl, int):
+            if int(ttl) <= 0 or int(ttl) > 256:
+                raise ValueError('invalid ttl - value out of range <1-255>')
+        else:
+            raise TypeError('Expected <class \'int\'> not a {}'.format(type(ttl)))
+
+    def _validate_ping_size(self, size: int) -> None:
+        if isinstance(size, int):
+            if size < 7 or size > 65507:
+                raise ValueError('invalid size - value out of range <1-65507>')
+        else:
+            raise TypeError('Expected <class \'int\'> not a {}'.format(type(size)))
+
+    def _validate_ping_count(self, count: int) -> None:
+        if isinstance(count, int):
+            if count < 1 or count > 1000:
+                raise ValueError('invalid count - value out of range <1-1000>')
+        else:
+            raise TypeError('Expected <class \'int\'> not a {}'.format(type(count)))
 
 if __name__ == '__main__':
     pass
