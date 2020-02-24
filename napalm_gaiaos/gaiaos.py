@@ -392,7 +392,7 @@ class GaiaOSDriver(NetworkDriver):
             values = []
             re_output_rtt = r'(\d+).*time=(.*)\sms'
             re_output_rtt_unreachable = r'(.*[Uu]nreachable)'
-            re_stats_rtt = '.*=\s(.*)/(.*)/(.*)/(.*)\sms'
+            re_stats_rtt = r'.*=\s(.*)/(.*)/(.*)/(.*)\sms'
             re_unreachable = r'.*100%\spacket\sloss.*'
             mobj = re.match(re_unreachable, output[-2])
             packets_sent = 0
@@ -454,11 +454,11 @@ class GaiaOSDriver(NetworkDriver):
         interface_list = output.split()
         for interface in interface_list:
             output = self.device.send_command('show interface {0} ipv4-address'.format(interface))
-            mobj = re.match('.*ipv4-address\s*(.*)/.*', output)
+            mobj = re.match(r'.*ipv4-address\s*(.*)/.*', output)
             if mobj is not None:
                 source_interfaces.append(mobj.group(1))
             output = self.device.send_command('show interface {0} ipv6-address'.format(interface))
-            mobj = re.match('.*ipv6-address\s*(.*)/.*', output)
+            mobj = re.match(r'.*ipv6-address\s*(.*)/.*', output)
             source_interfaces.append(interface)
         if source not in source_interfaces:
             raise ValueError('invalid source')
