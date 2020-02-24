@@ -329,11 +329,32 @@ class GaiaOSDriver(NetworkDriver):
             count: int = 0 < count <= 1000,
             vrf: None = VSX is not supported yet }
         :return: dict {
+                    'success': {
+                        'probes_sent': 5,
+                        'packet_loss': 0,
+                        'rtt_min': 72.158,
+                        'rtt_max': 72.433,
+                        'rtt_avg': 72.268,
+                        'rtt_stddev': 0.094,
+                        'results': [
+                            {
+                                'ip_address': u'1.1.1.1',
+                                'rtt': 72.248
+                            },
+                            {
+                                'ip_address': '2.2.2.2',
+                                'rtt': 72.299
+                            }
+                        ]
+                    }
+                }
 
+            OR
 
-
-
+        {
+            'error': 'unknown host 8.8.8.8.8'
         }
+
         """
         try:
             self.device.send_command('\t')
