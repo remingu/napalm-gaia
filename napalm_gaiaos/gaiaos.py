@@ -1,4 +1,5 @@
 import logging
+import statistics
 import time
 import re
 import socket
@@ -315,16 +316,16 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise RuntimeError('unable to enter expert mode')
 
-    def ping(self, destination: str, **kwargs):
+    def ping(self, destination: str, **kwargs) -> dict:
         """
             ping destination from device
-
+            response times below 1ms will be treated as 1ms
         :param destination: str
         :param kwargs: dict {
             source: str <interface|ip-address>,
             ttl: int =  0 < ttl < 256,
             timeout: None - Not Supported,
-            size: int = 0 < size in bytes < 65507,
+            size: int = 7 < size in bytes < 65507,
             count: int = 0 < count <= 1000,
             vrf: None = VSX is not supported yet }
         :return: dict {
@@ -338,26 +339,39 @@ class GaiaOSDriver(NetworkDriver):
             self.device.send_command('\t')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-        self._is_valid_hostname(destination)
-        command = r'ping {0}'.format(destination)
-        if 'source' in kwargs:
-            self._validate_ping_source(kwargs['source'])
-            command += ' -I {0}'.format(kwargs['source'])
-        if 'ttl' in kwargs:
-            self._validate_ping_ttl(kwargs['ttl'])
-            command += ' -t {0}'.format(kwargs['ttl'])
-        if 'size' in kwargs:
-            self._validate_ping_size(kwargs['size'])
-            command += ' -s {0}'.format(kwargs['size'])
-        if 'count' in kwargs:
-            self._validate_ping_count(kwargs['count'])
-            command += ' -c {0}'.format(kwargs['count'])
+        if self._is_valid_hostname(destination) is True:
+            command = r'ping {0}'.format(destination)
+            if 'source' in kwargs:
+                self._validate_ping_source(kwargs['source'])
+                command += ' -I {0}'.format(kwargs['source'])
+            if 'ttl' in kwargs:
+                self._validate_ping_ttl(kwargs['ttl'])
+                command += ' -t {0}'.format(kwargs['ttl'])
+            if 'size' in kwargs:
+                self._validate_ping_size(kwargs['size'])
+                command += ' -s {0}'.format(kwargs['size'])
+            if 'count' in kwargs:
+                self._validate_ping_count(kwargs['count'])
+                command += ' -c {0}'.format(kwargs['count'])
+            else:
+                command += ' -c 5'
             output = self.device.send_command(command, delay_factor=10)
-        else:
-            output = self.device.send_command(command)
-        return command
+            output = str(output).split('\n')
+            values = []
+            re_output_ge_1ms = r'(\d+).*time=(.*)\sms'
+            re_output_le_1ms = r'.*ttl=\d+$'
+            re_stats_overview = r'2 packets transmitted, 2 received, 0% packet loss, time 1003ms'
+            re_stats_overview = r'2 packets transmitted, 2 received, 0% packet loss, time 1003ms'
+            re_stats_rtt = 'rtt min/avg/max/mdev = 2.597/2.898/3.200/0.306 ms'
+            print(output)
+            print(output[-1])
+            print(command)
 
-    def _is_valid_hostname(self, hostname):
+            return []
+        else:
+            raise ValueError('invalid host format')
+
+    def _is_valid_hostname(self, hostname) -> bool:
         if ipaddress.ip_address(hostname):
             return True
         else:
@@ -402,7 +416,7 @@ class GaiaOSDriver(NetworkDriver):
 
     def _validate_ping_size(self, size: int) -> None:
         if isinstance(size, int):
-            if size < 1 or size > 65507:
+            if size < 7 or size > 65507:
                 raise ValueError('invalid size - value out of range <1-65507>')
         else:
             raise TypeError('Expected <class \'int\'> not a {}'.format(type(size)))
