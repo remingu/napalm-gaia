@@ -301,8 +301,11 @@ class GaiaOSDriver(NetworkDriver):
             raise ConnectionClosedException(str(e))
 
     def send_clish_cmd(self, cmd: str) -> list:
-        output = self.device.send_command(cmd)
-        return output
+        try:
+            output = self.device.send_command(cmd)
+            return output
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
 
     def send_expert_cmd(self, cmd: str) -> str:
         if self._enter_expert_mode() is True:
@@ -312,7 +315,7 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise RuntimeError('unable to enter expert mode')
 
-    def ping(self, destination, **kwargs):
+    def ping(self, destination, **kwargs) -> dict:
         if ipaddress.ip_address(destination):
             try:
 
