@@ -253,13 +253,14 @@ class GaiaOSDriver(NetworkDriver):
             :return: bool
         '''
         try:
-            self.rhostname = self.device.find_prompt()
-            output = self.device.send_command_timing('expert')
-            if 'Enter expert password:' in output:
-                output += self.device.send_command_timing(self.expert_password)
-                time.sleep(1)
-                self.device.find_prompt()
-                self.device.send_command(r'unset TMOUT')
+            if self._check_expert_mode() is False:
+                self.rhostname = self.device.find_prompt()
+                output = self.device.send_command_timing('expert')
+                if 'Enter expert password:' in output:
+                    output += self.device.send_command_timing(self.expert_password)
+                    time.sleep(1)
+                    self.device.find_prompt()
+                    self.device.send_command(r'unset TMOUT')
             return self._check_expert_mode()
         except Exception as e:
             raise RuntimeError(e)
@@ -279,7 +280,7 @@ class GaiaOSDriver(NetworkDriver):
                 else:
                     return False
             else:
-                return False
+                return True
         except Exception as e:
             raise RuntimeError(e)
 
