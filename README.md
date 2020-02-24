@@ -3,8 +3,8 @@
 CheckPoint GaiaOS driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library.<br> 
 Certain commands will require expert password. <br>
 Please note that the cli mode supports only clish commands.<br>
-This driver is not slightly feature complete. <br>
-You can send atomic commands using send_clish_cmd() and send_expert_cmd() methods.
+This driver is not slightly feature complete. 
+(You can send atomic commands using send_clish_cmd() and send_expert_cmd() methods.)
 
 
 ## install
