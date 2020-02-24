@@ -31,6 +31,7 @@ class GaiaOSDriver(NetworkDriver):
         self.device = self._netmiko_open(device_type, netmiko_optional_args=self.optional_args)
 
     def close(self):
+        self._exit_expert_mode()
         self._netmiko_close()
     
     def cli(self, commands: list) -> dict:
@@ -255,6 +256,7 @@ class GaiaOSDriver(NetworkDriver):
         try:
             if self._check_expert_mode() is False:
                 self.rhostname = self.device.find_prompt()
+
                 output = self.device.send_command_timing('expert')
                 if 'Enter expert password:' in output:
                     output += self.device.send_command_timing(self.expert_password)
