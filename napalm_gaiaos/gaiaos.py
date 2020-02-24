@@ -394,8 +394,6 @@ class GaiaOSDriver(NetworkDriver):
             values = []
             re_output_rtt = r'(\d+).*time=(.*)\sms'
             re_output_rtt_unreachable = r'(.*[Uu]nreachable)'
-            re_stats_overview = r'2 packets transmitted, 2 received, 0% packet loss, time 1003ms'
-
             re_stats_rtt = '.*=\s(.*)/(.*)/(.*)/(.*)\sms'
             re_unreachable = r'.*100%\spacket\sloss.*'
             mobj = re.match(re_unreachable, output[-2])
