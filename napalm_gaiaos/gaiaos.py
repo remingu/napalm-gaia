@@ -26,7 +26,6 @@ class GaiaOSDriver(NetworkDriver):
         if 'secret' in optional_args:
             self.expert_password = optional_args['secret']
 
-
     def open(self):
         device_type = 'checkpoint_gaia'
         self.device = self._netmiko_open(device_type, netmiko_optional_args=self.optional_args)
@@ -281,7 +280,6 @@ class GaiaOSDriver(NetworkDriver):
         except Exception as e:
             raise RuntimeError(e)
 
-
     def _exit_expert_mode(self) -> bool:
         '''
             :return: bool
@@ -485,6 +483,7 @@ class GaiaOSDriver(NetworkDriver):
                 raise ValueError('invalid count - value out of range <1-1000>')
         else:
             raise TypeError('Expected <class \'int\'> not a {}'.format(type(count)))
+
 
 if __name__ == '__main__':
     pass
