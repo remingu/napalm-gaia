@@ -315,27 +315,86 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise RuntimeError('unable to enter expert mode')
 
-    def ping(self, destination: str, **kwargs) -> dict:
+    def ping(self, destination: str, **kwargs):
         """
-
+            ping destination from device
 
         :param destination: str
         :param kwargs: dict {
             source: str <interface|ip-address>,
             ttl: int =  0 < ttl < 256,
             timeout: None - Not Supported,
-            size: int = 0 < size < 65507,
+            size: int = 0 < size in bytes < 65507,
             count: int = count > 0,
             vrf: None = VSX is not supported yet }
-        :return:
+        :return: dict {
+
+
+
+
+        }
         """
-        if ipaddress.ip_address(destination):
-            try:
+        try:
+            self.device.find_prompt()
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        if self._is_valid_hostname(destination) is True:
+            command = r'ping {0}'.format(destination)
+            if 'source' in kwargs:
+                if self._validate_ping_source(kwargs['source']) is True:
+                    command += ' -I {0}'.format(kwargs['source'])
+            if 'ttl' in kwargs:
+                self._validate_ping_ttl(kwargs['ttl'])
+
+            return command
+
+    def _is_valid_hostname(self, hostname):
+        if ipaddress.ip_address(hostname):
+            return True
+        else:
+            if hostname[-1] == ".":
+                # strip exactly one dot from the right, if present
+                hostname = hostname[:-1]
+            if len(hostname) > 253:
+                return False
+            labels = hostname.split(".")
+            # the TLD must be not all-numeric
+            if re.match(r"[0-9]+$", labels[-1]):
+                return False
+            allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
+            return all(allowed.match(label) for label in labels)
+
+    def _validate_ping_source(self, source: str) -> bool:
+        source_interfaces = []
+        try:
+            output = self.device.send_command_timing('show interfaces\t')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(e)
+        interface_list = output.split()
+        for interface in interface_list:
+            output = self.device.send_command('show interface {0} ipv4-address'.format(interface))
+            mobj = re.match('.*ipv4-address\s*(.*)/.*', output)
+            if mobj is not None:
+                source_interfaces.append(mobj.group(1))
+            source_interfaces.append(interface)
+        if source in source_interfaces:
+            return True
+        else:
+            return False
+
+    def _validate_ping_ttl(self, ttl) -> None:
+        if isinstance(ttl, int):
+            if int(ttl) <= 0 or int(ttl) < 256:
+                raise ValueError('invalid ttl')
+        elif isinstance(ttl, str):
+            if int(ttl) <= 0 or int(ttl) > 255:
+                raise ValueError('invalid ttl')
+        else:
+            raise ValueError('invalid ttl')
 
 
-                pass
-            except:
-                pass
 
 if __name__ == '__main__':
     pass
