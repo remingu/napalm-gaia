@@ -315,7 +315,20 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise RuntimeError('unable to enter expert mode')
 
-    def ping(self, destination, **kwargs) -> dict:
+    def ping(self, destination: str, **kwargs) -> dict:
+        """
+
+
+        :param destination: str
+        :param kwargs: dict {
+            source: str <interface|ip-address>,
+            ttl: int =  0 < ttl < 256,
+            timeout: None - Not Supported,
+            size: int = 0 < size < 65507,
+            count: int = count > 0,
+            vrf: None = VSX is not supported yet }
+        :return:
+        """
         if ipaddress.ip_address(destination):
             try:
 
