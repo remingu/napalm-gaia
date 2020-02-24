@@ -384,7 +384,6 @@ class GaiaOSDriver(NetworkDriver):
                 response = {}
                 response['success'] = {}
                 response['success']['results'] = []
-                packets = re.match(re_stats_overview, output[-2])
                 rttstats = re.match(re_stats_rtt, output[-1])
                 response = { 'probes_sent': packets_sent,
                     'packet_loss': packets_lost,
