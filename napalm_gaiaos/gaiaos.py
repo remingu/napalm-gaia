@@ -43,6 +43,22 @@ class GaiaOSDriver(NetworkDriver):
         self._netmiko_close()
     
     def cli(self, commands: list) -> dict:
+        """
+        Will execute a list of commands and return the output in a dictionary format.
+        Example::
+            {
+                u'show version product':  u'Product version Check Point Gaia R80.20',
+                u'show route'     :   u'''
+                        Codes: C - Connected, S - Static, R - RIP, B - BGP (D - Default),
+                        O - OSPF IntraArea (IA - InterArea, E - External, N - NSSA)
+                        A - Aggregate, K - Kernel Remnant, H - Hidden, P - Suppressed,
+                        U - Unreachable, i - Inactive
+
+                        S         0.0.0.0/0           via 172.16.10.1, eth0, cost 0, age 57785
+                        C         127.0.0.0/8         is directly connected, lo
+                        C         172.16.10.0/26     is directly connected, eth0'''
+            }
+        """
         output = {}
         try:
             if isinstance(commands, list):
