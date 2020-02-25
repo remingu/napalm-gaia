@@ -13,7 +13,7 @@ we're preparing pypi deployment at the moment, meanwhile you can install testpac
 
 ## documentation
 
-(https://napalm-gaia.readthedocs.io/en/latest)
+https://napalm-gaia.readthedocs.io/en/latest
 
 ## simple test
     #!/usr/bin/env python3
