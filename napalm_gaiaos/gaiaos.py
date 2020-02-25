@@ -396,11 +396,11 @@ class GaiaOSDriver(NetworkDriver):
                 'vrf': None
                 }
 
-            :return:
+            :return: dict
 
             example::
 
-                dict {
+                {
                     'success': {
                         'probes_sent': 5,
                         'packet_loss': 0,
