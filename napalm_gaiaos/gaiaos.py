@@ -440,11 +440,11 @@ class GaiaOSDriver(NetworkDriver):
                         'rtt_stddev': 0.094,
                         'results': [
                             {
-                                'ip_address': '1.1.1.1',
+                                'ip_address': u'1.1.1.1',
                                 'rtt': 72.248
                             },
                             {
-                                'ip_address': '1.1.1.1',
+                                'ip_address': u'1.1.1.1',
                                 'rtt': 72.299
                             }
                         ]
