@@ -577,35 +577,35 @@ class GaiaOSDriver(NetworkDriver):
     # """                               the tbd section                                  """ #
     ##########################################################################################
 
-    def get_bgp_config(self) -> None:
+    def get_bgp_config(self, **kwargs) -> dict:
         """
         Not implemented yet
         """
-        return None
+        return {}
 
-    def get_bgp_neighbors(self) -> None:
+    def get_bgp_neighbors(self) -> dict:
         """
         Not implemented yet
         """
-        return None
+        return {}
 
-    def get_bgp_neighbors_detail(self) -> None:
+    def get_bgp_neighbors_detail(self, **kwargs) -> dict:
         """
         Not implemented yet
         """
-        return None
+        return {}
 
-    def get_config(self) -> None:
+    def get_config(self, **kwargs) -> dict:
         """
         Not implemented yet
         """
-        return None
+        return {}
 
-    def get_environment(self) -> None:
+    def get_environment(self) -> dict:
         """
         Not implemented yet
         """
-        return None
+        return {}
 
     def get_facts(self) -> None:
         """
@@ -715,6 +715,17 @@ class GaiaOSDriver(NetworkDriver):
         """
         return None
 
+    def load_template(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def compliance_report(self, validation_file=None, validation_source=None):
+        """
+        Not implemented yet
+        """
+        return None
 
 if __name__ == '__main__':
     pass
