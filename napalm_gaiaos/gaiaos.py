@@ -123,7 +123,7 @@ class GaiaOSDriver(NetworkDriver):
 
     def get_arp_table(self, vrf='') -> list:
         """
-            | Get arp table information. (requires expertmode available)
+            | Get arp table information. (requires expert-password)
             | vrf is not supported.
             | Returns a list of dictionaries having the following set of keys:
 
@@ -354,6 +354,12 @@ class GaiaOSDriver(NetworkDriver):
             raise ConnectionClosedException(str(e))
 
     def send_clish_cmd(self, cmd: str) -> str:
+        """
+            send clish command
+
+            :param cmd: (str)
+            :return: (str)
+        """
         try:
             output = self.device.send_command(cmd)
             return output
@@ -361,6 +367,12 @@ class GaiaOSDriver(NetworkDriver):
             raise ConnectionClosedException(str(e))
 
     def send_expert_cmd(self, cmd: str) -> str:
+        """
+            send expert-mode command(requires expert-password)
+
+            :param cmd: (str)
+            :return: (str)
+        """
         if self._enter_expert_mode() is True:
             output = self.device.send_command(cmd)
             self._exit_expert_mode()
