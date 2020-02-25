@@ -15,7 +15,7 @@ class GaiaOSDriver(NetworkDriver):
     """
         | optional_args:
 
-            * secret: (<expert-password>: str)
+            * secret: <expert-password>: str
 
     """
 
@@ -89,12 +89,12 @@ class GaiaOSDriver(NetworkDriver):
             | The values represent the details of the user,
             | represented by the following keys:
 
-                * uid (int)
-                * gid (int)
-                * homedir (str)
-                * shell (str)
-                * name (str)
-                * privileges (str)
+                * uid: int
+                * gid: int
+                * homedir: str
+                * shell: str
+                * name: str
+                * privileges: str
 
             :return: dict
 
@@ -145,11 +145,11 @@ class GaiaOSDriver(NetworkDriver):
             | vrf is not supported.
             | Returns a list of dictionaries having the following set of keys:
 
-                * interface (string)
-                * mac (string)
-                * ip (string)
-                * age (float)
-                * state (string)
+                * interface: str
+                * mac: str
+                * ip: str
+                * age: float
+                * state: str
 
             :return: list
 
@@ -375,7 +375,7 @@ class GaiaOSDriver(NetworkDriver):
         """
             send clish command
 
-            :param cmd: (str)
+            :param cmd: str
             :return: (str)
         """
         try:
@@ -388,8 +388,8 @@ class GaiaOSDriver(NetworkDriver):
         """
             send expert-mode command(requires expert-password)
 
-            :param cmd: (str)
-            :return: (str)
+            :param cmd: str
+            :return: str
         """
         if self._enter_expert_mode() is True:
             output = self.device.send_command(cmd)
