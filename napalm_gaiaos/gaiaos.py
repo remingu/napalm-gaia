@@ -48,10 +48,10 @@ class GaiaOSDriver(NetworkDriver):
         | Works only for cli.sh commands.
 
         Example::
+
             {
-                u'show version product':  u'''
-                        Product version Check Point Gaia R80.20''',
-                u'show route'     :   u'''
+                'show version product':  'Product version Check Point Gaia R80.20',
+                'show route': '''
                         Codes: C - Connected, S - Static, R - RIP, B - BGP (D - Default),
                         O - OSPF IntraArea (IA - InterArea, E - External, N - NSSA)
                         A - Aggregate, K - Kernel Remnant, H - Hidden, P - Suppressed,
