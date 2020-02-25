@@ -578,154 +578,97 @@ class GaiaOSDriver(NetworkDriver):
     ##########################################################################################
 
     def get_bgp_config(self, **kwargs) -> dict:
-        """
-        Not implemented yet
-        """
-        return {}
+        raise NotImplementedError
 
     def get_bgp_neighbors(self) -> dict:
-        """
-        Not implemented yet
-        """
-        return {}
+        raise NotImplementedError
 
     def get_bgp_neighbors_detail(self, **kwargs) -> dict:
-        """
-        Not implemented yet
-        """
-        return {}
+        raise NotImplementedError
 
     def get_config(self, **kwargs) -> dict:
-        """
-        Not implemented yet
-        """
-        return {}
+        raise NotImplementedError
 
     def get_environment(self) -> dict:
-        """
-        Not implemented yet
-        """
-        return {}
+        raise NotImplementedError
 
-    def get_facts(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_facts(self) -> dict:
+        raise NotImplementedError
 
-    def get_firewall_policies(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_firewall_policies(self) -> dict:
+        raise NotImplementedError
 
-    def get_interfaces_counters(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_interfaces_counters(self) -> dict:
+        raise NotImplementedError
 
-    def get_ipv6_neighbors_table(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_ipv6_neighbors_table(self) -> list:
+        raise NotImplementedError
 
-    def get_lldp_neighbors(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_lldp_neighbors(self) -> dict:
+        raise NotImplementedError
 
-    def get_lldp_neighbors_detail(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_lldp_neighbors_detail(self, **kwargs) -> dict:
+        raise NotImplementedError
 
-    def get_mac_address_table(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_mac_address_table(self) -> list:
+        raise NotImplementedError
 
-    def get_network_instances(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_network_instances(self, **kwargs) -> dict:
+        raise NotImplementedError
 
-    def get_ntp_peers(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_ntp_peers(self) -> dict:
+        raise NotImplementedError
 
     def get_ntp_servers(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def get_ntp_stats(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def get_optics(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def get_probes_config(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def get_probes_results(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
-    def get_route_to(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+    def get_route_to(self, **kwargs) -> None:
+        raise NotImplementedError
 
     def get_snmp_information(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def is_alive(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def traceroute(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def load_template(self) -> None:
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
 
     def compliance_report(self, validation_file=None, validation_source=None):
-        """
-        Not implemented yet
-        """
-        return None
+        raise NotImplementedError
+
+    def commit_config(self, message=""):
+        raise NotImplementedError
+
+    def compare_config(self):
+        raise NotImplementedError
+
+    def load_merge_candidate(self, filename=None, config=None):
+        raise NotImplementedError
+
+    def load_replace_candidate(filename=None, config=None):
+        raise NotImplementedError
+
+    def rollback(self):
+        raise NotImplementedError
+
+
+
 
 if __name__ == '__main__':
     pass
