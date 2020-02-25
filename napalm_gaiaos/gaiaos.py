@@ -284,7 +284,6 @@ class GaiaOSDriver(NetworkDriver):
             | Returns a dict of dicts
 
             :return: dict
-            |
 
             example::
 
