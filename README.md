@@ -9,17 +9,18 @@ https://napalm-automation.net/
 
 
 ## Compability
+
 documented functions were successfully tested against:
  - R77.30 Gaia
  - R80.10 Gaia
  - R80.20 Gaia
  - R80.30 Gaia
  
-- untested yet:
+untested yet:
  - R80.40
  - R77.30 SPLAT
  
-- Limitations:
+Limitations:
  - vsx context switches are not implemented yet(feature is in work and will come asap, we need it aswell)
  
 
