@@ -9,5 +9,3 @@ GaiaOSDriver
 
 .. autoclass:: gaiaos.GaiaOSDriver
    :members:
-
-
