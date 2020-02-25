@@ -44,7 +44,9 @@ class GaiaOSDriver(NetworkDriver):
     
     def cli(self, commands: list) -> dict:
         """
-        Will execute a list of commands and return the output in a dictionary format.
+        | Will execute a list of commands and return the output in a dictionary format.
+        | Works only for cli.sh commands.
+
         Example::
             {
                 u'show version product':  u'Product version Check Point Gaia R80.20',
