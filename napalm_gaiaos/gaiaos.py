@@ -573,5 +573,148 @@ class GaiaOSDriver(NetworkDriver):
             raise TypeError('Expected <class \'int\'> not a {}'.format(type(count)))
 
 
+    ##########################################################################################
+    # """                               the tbd section                                  """ #
+    ##########################################################################################
+
+    def get_bgp_config(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_bgp_neighbors(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_bgp_neighbors_detail(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_config(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_environment(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_facts(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_firewall_policies(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_interfaces_counters(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_ipv6_neighbors_table(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_lldp_neighbors(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_lldp_neighbors_detail(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_mac_address_table(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_network_instances(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_ntp_peers(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_ntp_servers(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_ntp_stats(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_optics(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_probes_config(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_probes_results(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_route_to(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def get_snmp_information(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def is_alive(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+    def traceroute(self) -> None:
+        """
+        Not implemented yet
+        """
+        return None
+
+
 if __name__ == '__main__':
     pass
