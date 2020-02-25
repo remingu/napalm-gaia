@@ -49,8 +49,8 @@ class GaiaOSDriver(NetworkDriver):
 
         Example::
             {
-                u'show version product':  u'''Product version Check Point Gaia R80.20
-                ,'''
+                u'show version product':  u'''
+                        Product version Check Point Gaia R80.20''',
                 u'show route'     :   u'''
                         Codes: C - Connected, S - Static, R - RIP, B - BGP (D - Default),
                         O - OSPF IntraArea (IA - InterArea, E - External, N - NSSA)
