@@ -51,7 +51,7 @@ class GaiaOSDriver(NetworkDriver):
 
             {
                 'show version product':  'Product version Check Point Gaia R80.20',
-                'show route': '''
+                'show route': '
                         Codes: C - Connected, S - Static, R - RIP, B - BGP (D - Default),
                         O - OSPF IntraArea (IA - InterArea, E - External, N - NSSA)
                         A - Aggregate, K - Kernel Remnant, H - Hidden, P - Suppressed,
@@ -59,7 +59,7 @@ class GaiaOSDriver(NetworkDriver):
 
                         S         0.0.0.0/0           via 172.16.10.1, eth0, cost 0, age 57785
                         C         127.0.0.0/8         is directly connected, lo
-                        C         172.16.10.0/26     is directly connected, eth0'''
+                        C         172.16.10.0/26     is directly connected, eth0'
             }
         """
         output = {}
