@@ -1,6 +1,6 @@
 # napalm-gaia
 
-CheckPoint GaiaOS driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library.<br> 
+Experimental CheckPoint GaiaOS driver-plugin for NAPALM (Network Automation and Programmability Abstraction Layer with Multivendor support) python library.<br> 
 Certain commands will require expert password. <br>
 This driver is not slightly feature complete, check the docs what is possible at the moment.
 
