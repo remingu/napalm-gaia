@@ -643,25 +643,25 @@ class GaiaOSDriver(NetworkDriver):
     def is_alive(self) -> None:
         raise NotImplementedError
 
-    def traceroute(self) -> None:
+    def traceroute(self, **kwargs) -> None:
         raise NotImplementedError
 
-    def load_template(self) -> None:
+    def load_template(self, **kwargs) -> None:
         raise NotImplementedError
 
-    def compliance_report(self, validation_file=None, validation_source=None):
+    def compliance_report(self, **kwargs):
         raise NotImplementedError
 
-    def commit_config(self, message=""):
+    def commit_config(self, **kwargs):
         raise NotImplementedError
 
     def compare_config(self):
         raise NotImplementedError
 
-    def load_merge_candidate(self, filename=None, config=None):
+    def load_merge_candidate(self,  **kwargs):
         raise NotImplementedError
 
-    def load_replace_candidate(filename=None, config=None):
+    def load_replace_candidate(self, **kwargs):
         raise NotImplementedError
 
     def rollback(self):
