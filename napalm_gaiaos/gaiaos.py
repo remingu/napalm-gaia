@@ -12,11 +12,19 @@ from napalm.base.exceptions import ConnectionException, SessionLockedException, 
 
 
 class GaiaOSDriver(NetworkDriver):
+    """
+        | optional_args:
+
+            * secret: (<expert-password>: str)
+
+    """
+
     def __init__(self, hostname,
             username='',
             password='',
             timeout=10,
             optional_args=None):
+
         self.hostname = hostname
         self.username = username
         self.password = password
@@ -58,18 +66,42 @@ class GaiaOSDriver(NetworkDriver):
     
     def get_users(self) -> dict:
         """
-            Returns a dictionary with the configured users.
-            The keys of the main dictionary represents the username.
-            The values represent the details of the user,
-            represented by the following keys:
-    
+            | Returns a dictionary with the configured users.
+            | The keys of the main dictionary represents the username.
+            | The values represent the details of the user,
+            | represented by the following keys:
+
                 * uid (int)
                 * gid (int)
                 * homedir (str)
                 * shell (str)
                 * name (str)
                 * privileges (str)
+
+            :return: dict
+
+            .. code-block::
+
+                {
+                    'admin': {
+                        'uid': '0',
+                        'gid': '0',
+                        'homedir': '/home/admin',
+                        'shell': '/etc/cli.sh',
+                        'name': 'n/a',
+                        'privileges': 'Access to Expert features'},
+                    'monitor':                        {
+                        'uid': '102',
+                        'gid': '100',
+                        'homedir': '/home/monitor',
+                        'shell': '/etc/cli.sh',
+                        'name': 'Monitor',
+                        'privileges': 'None'}
+                }
+
+
         """
+
         username_regex = (
             r'^([A-z0-9_-]{1,32})\s+(\d+)\s+(\d+)\s+([/A-z0-9_-]{1,})\s+'
             r'([./A-z0-9_-]{1,})\s+((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-])\s+'
@@ -91,32 +123,39 @@ class GaiaOSDriver(NetworkDriver):
 
     def get_arp_table(self, vrf='') -> list:
         """
-                        Get arp table information. (requires expertmode available)
-                        Return a list of dictionaries having the following set of keys:
-                            * interface (string)
-                            * mac (string)
-                            * ip (string)
-                            * age (float)
-                            * state (string)
-                        For example::
-                            [
-                                {
-                                    'interface' : 'eth0',
-                                    'mac'       : '5c:5e:ab:da:3c:f0',
-                                    'ip'        : '172.17.17.1',
-                                    'age'       : 0.0
-                                    'age'       : 875.0
-                                    'state'     : 'REACHABLE'
-                                },
-                                {
-                                    'interface': 'eth0',
-                                    'mac'       : '66:0e:94:96:e0:ff',
-                                    'ip'        : '172.17.17.2',
-                                    'age'       : 0.0
-                                    'state'     : 'STALE'
-                                }
-                            ]
-                        """
+            | Get arp table information. (requires expertmode available)
+            | vrf is not supported.
+            | Returns a list of dictionaries having the following set of keys:
+
+                * interface (string)
+                * mac (string)
+                * ip (string)
+                * age (float)
+                * state (string)
+
+            :return: list
+
+            .. code-block::
+
+                [
+                    {
+                        'interface' : 'eth0',
+                        'mac'       : '5c:5e:ab:da:3c:f0',
+                        'ip'        : '172.17.17.1',
+                        'age'       : 875.0,
+                        'state'     : 'REACHABLE'
+                    },
+                    {
+                        'interface': 'eth0',
+                        'mac'       : '66:0e:94:96:e0:ff',
+                        'ip'        : '172.17.17.2',
+                        'age'       : 0.0,
+                        'state'     : 'STALE'
+                    }
+                ]
+
+        """
+
         arptable_regex = ()
         commands = 'ip -statistics show'
         arptable_regex = r'^([0-9.:a-f]+)\sdev\s([a-zA-Z0-9._-]+)\slladdr\s([0-9a-f:]+)\s' \
@@ -140,43 +179,40 @@ class GaiaOSDriver(NetworkDriver):
                                    )
         return arp_entries
 
-    def get_route_to(self, **kwargs):
-        pass
-
-    def get_config(self, retrieve='all', full=False):
-        pass
-
-    def get_facts(self):
-        pass
-
     def get_interfaces(self) -> dict:
         """
-        Get interface details.
-            last_flapped is not implemented
-            for virtual interfaces speed will return 0
-        Example Output:
-            {u'Vlan1': {'description': u'N/A',
-                        'is_enabled': True,
-                        'is_up': True,
-                        'last_flapped': -1.0,
-                        'mac_address': u'a493.4cc1.67a7',
-                        'speed': 100,
-                        'mtu': 1500},
-             u'Vlan100': {'description': u'Data Network',
-                          'is_enabled': True,
-                          'is_up': True,
-                          'last_flapped': -1.0,
-                          'mac_address': u'a493.4cc1.67a7',
-                          'speed': 100,
-                          'mtu': 65536},
-             u'Vlan200': {'description': u'Voice Network',
-                          'is_enabled': True,
-                          'is_up': True,
-                          'last_flapped': -1.0,
-                          'mac_address': u'a493.4cc1.67a7',
-                          'speed': 100,
-                          'mtu': 1500}}
+            | Get interface details.
+            | last_flapped is not implemented and will return -1.
+            | Virtual interfaces speed will return 0.
+
+            :return: dict
+
+            .. code-block::
+
+                {u'Vlan1': {'description': u'N/A',
+                            'is_enabled': True,
+                            'is_up': True,
+                            'last_flapped': -1.0,
+                            'mac_address': u'a493.4cc1.67a7',
+                            'speed': 100,
+                            'mtu': 1500},
+                 u'Vlan100': {'description': u'Data Network',
+                              'is_enabled': True,
+                              'is_up': True,
+                              'last_flapped': -1.0,
+                              'mac_address': u'a493.4cc1.67a7',
+                              'speed': 100,
+                              'mtu': 65536},
+                 u'Vlan200': {'description': u'Voice Network',
+                              'is_enabled': True,
+                              'is_up': True,
+                              'last_flapped': -1.0,
+                              'mac_address': u'a493.4cc1.67a7',
+                              'speed': 100,
+                              'mtu': 1500   }}
+
         """
+
         command_options = {'state': 'is_enabled',
                            'comments': 'description',
                            'speed': 'speed',
@@ -226,22 +262,24 @@ class GaiaOSDriver(NetworkDriver):
 
     def get_interfaces_ip(self):
         """
-                Get interface ip details.
-                Returns a dict of dicts
-                Example Output:
+            | Get interface ip details.
+            | Returns a dict of dicts
+
+            :return: dict
+            |
+
+            .. code-block::
+
                 {   u'FastEthernet8': {   'ipv4': {   u'10.66.43.169': {   'prefix_length': 22}}},
                     u'Loopback555': {   'ipv4': {   u'192.168.1.1': {   'prefix_length': 24}},
-                                        'ipv6': {   u'1::1': {   'prefix_length': 64},
-                                                    u'2001:DB8:1::1': {   'prefix_length': 64},
-                                                    u'2::': {   'prefix_length': 64},
-                                                    u'FE80::3': {   'prefix_length': 10}}},
+                                        'ipv6': {   u'1::1': {   'prefix_length': 64}}},
                     u'Tunnel0': {   'ipv4': {   u'10.63.100.9': {   'prefix_length': 24}}},
                     u'Tunnel1': {   'ipv4': {   u'10.63.101.9': {   'prefix_length': 24}}},
-                    u'Vlan100': {   'ipv4': {   u'10.40.0.1': {   'prefix_length': 24},
-                                                u'10.41.0.1': {   'prefix_length': 24},
-                                                u'10.65.0.1': {   'prefix_length': 24}}},
+                    u'Vlan100': {   'ipv4': {   u'10.65.0.1': {   'prefix_length': 24}}},
                     u'Vlan200': {   'ipv4': {   u'10.63.176.57': {   'prefix_length': 29}}}}
-                """
+
+        """
+
         command_options = {'ipv4-address': 'ipv4', 'ipv6-address': 'ipv6'}
         interface_table = {}
         try:
@@ -265,9 +303,9 @@ class GaiaOSDriver(NetworkDriver):
         return interface_table
 
     def _enter_expert_mode(self) -> bool:
-        '''
+        """
             :return: bool
-        '''
+        """
         try:
             if self._check_expert_mode() is False:
                 self.device.send_command('\t')
@@ -284,9 +322,9 @@ class GaiaOSDriver(NetworkDriver):
             raise RuntimeError(e)
 
     def _exit_expert_mode(self) -> bool:
-        '''
+        """
             :return: bool
-        '''
+        """
         try:
             if self._check_expert_mode() is True:
                 self.device.send_command_timing(r'exit')
@@ -315,7 +353,7 @@ class GaiaOSDriver(NetworkDriver):
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
 
-    def send_clish_cmd(self, cmd: str) -> list:
+    def send_clish_cmd(self, cmd: str) -> str:
         try:
             output = self.device.send_command(cmd)
             return output
@@ -330,19 +368,41 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise RuntimeError('unable to enter expert mode')
 
-    def ping(self, destination: str, **kwargs) -> dict:
+    def ping(self, destination: str, **opts) -> dict:
         """
-            ping destination from device
-            response times below 1ms will be treated as 1ms
-        :param destination: str
-        :param kwargs: dict {
-            source: str <interface|ip-address>,
-            ttl: int =  0 < ttl < 256,
-            timeout: None - Not Supported,
-            size: int = 7 < size in bytes < 65507,
-            count: int = 0 < count <= 1000,
-            vrf: None = VSX is not supported yet }
-        :return: dict {
+            | ping destination from device
+            | vsx/vrf is currently not supported, neither is setting timeout
+
+            :param destination: str
+            :param opts: dict
+
+            | opts:
+
+                * source: (<interface|ip-address>: str)
+                * ttl: (1-255: int)
+                * timeout: None
+                * vrf: None
+                * size: (8-65507: int)
+                * count: (1-1000: int)
+
+            | example:
+
+            .. code-block::
+
+                {
+                'source': 'eth0',
+                'ttl': 30,
+                'timeout': None,
+                'size': 1500,
+                'count': 10,
+                'vrf': None
+                }
+
+            :return:
+
+            .. code-block::
+
+                dict {
                     'success': {
                         'probes_sent': 5,
                         'packet_loss': 0,
@@ -365,9 +425,11 @@ class GaiaOSDriver(NetworkDriver):
 
             OR
 
-        {
-            'error': 'unknown host 8.8.8.8.8'
-        }
+            .. code-block::
+
+                {
+                    'error': 'unknown host 8.8.8.8'
+                }
 
         """
         try:
@@ -376,18 +438,18 @@ class GaiaOSDriver(NetworkDriver):
             raise ConnectionClosedException(str(e))
         if self._is_valid_hostname(destination) is True:
             command = r'ping {0}'.format(destination)
-            if 'source' in kwargs:
-                self._validate_ping_source(kwargs['source'])
-                command += ' -I {0}'.format(kwargs['source'])
-            if 'ttl' in kwargs:
-                self._validate_ping_ttl(kwargs['ttl'])
-                command += ' -t {0}'.format(kwargs['ttl'])
-            if 'size' in kwargs:
-                self._validate_ping_size(kwargs['size'])
-                command += ' -s {0}'.format(kwargs['size'])
-            if 'count' in kwargs:
-                self._validate_ping_count(kwargs['count'])
-                command += ' -c {0}'.format(kwargs['count'])
+            if 'source' in opts:
+                self._validate_ping_source(opts['source'])
+                command += ' -I {0}'.format(opts['source'])
+            if 'ttl' in opts:
+                self._validate_ping_ttl(opts['ttl'])
+                command += ' -t {0}'.format(opts['ttl'])
+            if 'size' in opts:
+                self._validate_ping_size(opts['size'])
+                command += ' -s {0}'.format(opts['size'])
+            if 'count' in opts:
+                self._validate_ping_count(opts['count'])
+                command += ' -c {0}'.format(opts['count'])
             else:
                 command += ' -c 5'
             output = self.device.send_command(command, delay_factor=10)
