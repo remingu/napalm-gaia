@@ -33,7 +33,7 @@ we're preparing pypi deployment at the moment, meanwhile you can install testpac
 https://napalm-gaia.readthedocs.io/en/latest
 
 
-## Contact
+## contact
 
 You can reach us via [networktocode](https://networktocode.herokuapp.com/) #napalm-gaia
 
