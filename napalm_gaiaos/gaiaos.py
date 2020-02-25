@@ -80,7 +80,7 @@ class GaiaOSDriver(NetworkDriver):
 
             :return: dict
 
-            .. code-block::
+            example::
 
                 {
                     'admin': {
@@ -135,7 +135,7 @@ class GaiaOSDriver(NetworkDriver):
 
             :return: list
 
-            .. code-block::
+            example::
 
                 [
                     {
@@ -187,7 +187,7 @@ class GaiaOSDriver(NetworkDriver):
 
             :return: dict
 
-            .. code-block::
+            example::
 
                 {u'Vlan1': {'description': u'N/A',
                             'is_enabled': True,
@@ -268,7 +268,7 @@ class GaiaOSDriver(NetworkDriver):
             :return: dict
             |
 
-            .. code-block::
+            example::
 
                 {   u'FastEthernet8': {   'ipv4': {   u'10.66.43.169': {   'prefix_length': 22}}},
                     u'Loopback555': {   'ipv4': {   u'192.168.1.1': {   'prefix_length': 24}},
@@ -385,9 +385,7 @@ class GaiaOSDriver(NetworkDriver):
                 * size: (8-65507: int)
                 * count: (1-1000: int)
 
-            | example:
-
-            .. code-block::
+            example::
 
                 {
                 'source': 'eth0',
@@ -400,7 +398,7 @@ class GaiaOSDriver(NetworkDriver):
 
             :return:
 
-            .. code-block::
+            example::
 
                 dict {
                     'success': {
@@ -423,9 +421,7 @@ class GaiaOSDriver(NetworkDriver):
                     }
                 }
 
-            OR
-
-            .. code-block::
+            OR::
 
                 {
                     'error': 'unknown host 8.8.8.8'
