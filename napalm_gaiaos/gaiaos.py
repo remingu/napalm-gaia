@@ -573,5 +573,102 @@ class GaiaOSDriver(NetworkDriver):
             raise TypeError('Expected <class \'int\'> not a {}'.format(type(count)))
 
 
+    ##########################################################################################
+    # """                               the tbd section                                  """ #
+    ##########################################################################################
+
+    def get_bgp_config(self, **kwargs):
+        raise NotImplementedError
+
+    def get_bgp_neighbors(self):
+        raise NotImplementedError
+
+    def get_bgp_neighbors_detail(self, **kwargs) :
+        raise NotImplementedError
+
+    def get_config(self, **kwargs):
+        raise NotImplementedError
+
+    def get_environment(self):
+        raise NotImplementedError
+
+    def get_facts(self):
+        raise NotImplementedError
+
+    def get_firewall_policies(self):
+        raise NotImplementedError
+
+    def get_interfaces_counters(self):
+        raise NotImplementedError
+
+    def get_ipv6_neighbors_table(self):
+        raise NotImplementedError
+
+    def get_lldp_neighbors(self):
+        raise NotImplementedError
+
+    def get_lldp_neighbors_detail(self, **kwargs):
+        raise NotImplementedError
+
+    def get_mac_address_table(self):
+        raise NotImplementedError
+
+    def get_network_instances(self, **kwargs):
+        raise NotImplementedError
+
+    def get_ntp_peers(self):
+        raise NotImplementedError
+
+    def get_ntp_servers(self):
+        raise NotImplementedError
+
+    def get_ntp_stats(self):
+        raise NotImplementedError
+
+    def get_optics(self):
+        raise NotImplementedError
+
+    def get_probes_config(self):
+        raise NotImplementedError
+
+    def get_probes_results(self):
+        raise NotImplementedError
+
+    def get_route_to(self, **kwargs):
+        raise NotImplementedError
+
+    def get_snmp_information(self):
+        raise NotImplementedError
+
+    def is_alive(self):
+        raise NotImplementedError
+
+    def traceroute(self, **kwargs):
+        raise NotImplementedError
+
+    def load_template(self, **kwargs):
+        raise NotImplementedError
+
+    def compliance_report(self, **kwargs):
+        raise NotImplementedError
+
+    def commit_config(self, **kwargs):
+        raise NotImplementedError
+
+    def compare_config(self):
+        raise NotImplementedError
+
+    def load_merge_candidate(self,  **kwargs):
+        raise NotImplementedError
+
+    def load_replace_candidate(self, **kwargs):
+        raise NotImplementedError
+
+    def rollback(self):
+        raise NotImplementedError
+
+
+
+
 if __name__ == '__main__':
     pass
