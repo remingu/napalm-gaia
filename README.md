@@ -23,9 +23,7 @@ untested yet:
 Limitations:
  - vsx context switches are not implemented yet(feature is in work and will come asap, we need it aswell)
  
-
-
-https://napalm-automation.net/
+ 
 ## install
  
 we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install.
