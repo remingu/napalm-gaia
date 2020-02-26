@@ -1,4 +1,9 @@
 from distutils.core import setup
+import sys
+
+import sys
+if sys.version_info < (3,6):
+    sys.exit('Sorry, Python < 3.6 is not supported')
 
 setup(
     name='napalm-gaia',

@@ -13,7 +13,7 @@ from napalm.base.exceptions import ConnectionException, SessionLockedException, 
 
 class GaiaOSDriver(NetworkDriver):
     """
-        | optional_args:
+        | optional_args: dict
 
             * secret: <expert-password>: str
 
