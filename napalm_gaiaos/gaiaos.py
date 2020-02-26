@@ -578,96 +578,274 @@ class GaiaOSDriver(NetworkDriver):
     ##########################################################################################
 
     def get_bgp_config(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_bgp_neighbors(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
-    def get_bgp_neighbors_detail(self, **kwargs) :
+    def get_bgp_neighbors_detail(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_config(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_environment(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_facts(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_firewall_policies(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_interfaces_counters(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_ipv6_neighbors_table(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_lldp_neighbors(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_lldp_neighbors_detail(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_mac_address_table(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_network_instances(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_ntp_peers(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_ntp_servers(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_ntp_stats(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_optics(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_probes_config(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_probes_results(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_route_to(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def get_snmp_information(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def is_alive(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def traceroute(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def load_template(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def compliance_report(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def commit_config(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def compare_config(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def load_merge_candidate(self,  **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def load_replace_candidate(self, **kwargs):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
 
     def rollback(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
         raise NotImplementedError
-
-
 
 
 if __name__ == '__main__':
