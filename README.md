@@ -26,7 +26,7 @@ Limitations:
  
 ## install
  
-we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install.
+we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install/pip.
 
 ## documentation
 
