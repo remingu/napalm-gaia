@@ -209,7 +209,7 @@ class GaiaOSDriver(NetworkDriver):
                     set user admin password-hash *******************
                 "
             
-            Retrieve options:: text
+            Retrieve options:: 
 
 
                 all                  - display full configuration
