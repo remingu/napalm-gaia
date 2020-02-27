@@ -458,6 +458,7 @@ class GaiaOSDriver(NetworkDriver):
                 }
 
         """
+
         try:
             self.device.send_command('\t')
         except (socket.error, EOFError) as e:
