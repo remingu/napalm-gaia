@@ -7,7 +7,7 @@ if sys.version_info < (3,6):
 
 setup(
     name='napalm-gaia',
-    version='0.0.2rc1',
+    version='0.0.2rc2',
     packages=['napalm_gaiaos', 'napalm_gaiaos.helper'],
     url='',
     license='',

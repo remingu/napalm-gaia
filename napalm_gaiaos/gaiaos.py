@@ -240,7 +240,7 @@ class GaiaOSDriver(NetworkDriver):
                            'mtu': 'mtu'}
         interface_table = {}
         try:
-            output = self.device.send_command_timing('show interfaces\t')
+            output = self.device.send_command_timing('show interfaces\t', max_loops=2)
             interface_list = output.split()
             time.sleep(0.2)
 
@@ -326,18 +326,19 @@ class GaiaOSDriver(NetworkDriver):
         """
         try:
             if self._check_expert_mode() is False:
-                self.device.send_command('\t')
-                output = self.device.send_command_timing('expert')
-                if 'Enter expert password:' in output:
-                    output += self.device.send_command_timing(self.expert_password)
-                    time.sleep(1)
-                    self.device.find_prompt()
+                self.device.send_command('expert', expect_string=r':')
+                output = self.device.send_command_timing(self.expert_password)
+                if r']#' in output:
+                    self.device.set_base_prompt(r'#')
                     self.device.send_command(r'unset TMOUT')
-            return self._check_expert_mode()
+                return self._check_expert_mode()
+
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
         except Exception as e:
             raise RuntimeError(e)
+
+
 
     def _exit_expert_mode(self) -> bool:
         """
@@ -345,9 +346,7 @@ class GaiaOSDriver(NetworkDriver):
         """
         try:
             if self._check_expert_mode() is True:
-                self.device.send_command_timing(r'exit')
-                time.sleep(0.5)
-                self.device.send_command('\t')
+                self.device.send_command('exit', expect_string=r'>')
                 if self._check_expert_mode() is False:
                     return True
                 else:
