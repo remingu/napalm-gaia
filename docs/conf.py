@@ -18,11 +18,11 @@ sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
 project = 'napalm-gaia'
-copyright = '2020, remingu'
-author = 'remingu'
+copyright = '2020, remingu, mbtathcx'
+author = 'remingu, mbtathcx'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.2rc3'
+release = '0.0.2'
 
 
 # -- General configuration ---------------------------------------------------
