@@ -133,3 +133,4 @@ dmypy.json
 idea/
 test.py
 prep_utils/
+*github*
