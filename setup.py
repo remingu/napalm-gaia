@@ -17,11 +17,11 @@ with open(path.join(lpath, 'requirements.txt'), "r") as fh:
 
 setup(
     name='napalm-gaia',
-    version='0.0.2rc4',
+    version='0.0.2rc3',
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages('napalm_gaiaos'),
-    package_dir={'': 'napalm_gaiaos' },
+    package_dir={'': 'napalm_gaiaos'},
     url='https://github.com/remingu/napalm-gaia',
     license='Apache 2.0',
     author='remingu, mbtathcx',
