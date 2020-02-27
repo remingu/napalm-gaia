@@ -22,7 +22,7 @@ copyright = '2020, remingu'
 author = 'remingu'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1b9'
+release = '0.0.2rc3'
 
 
 # -- General configuration ---------------------------------------------------
