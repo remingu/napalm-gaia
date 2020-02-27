@@ -417,8 +417,8 @@ class GaiaOSDriver(NetworkDriver):
             
             example::
                 {
-                    0:'0',
-                    6:'dummy-vsx-instance',
+                  |  0:'0',
+                  |  6:'dummy-vsx-instance',
                 }
         """
         if self._check_vsx_state() is False:
@@ -752,15 +752,6 @@ class GaiaOSDriver(NetworkDriver):
         raise NotImplementedError
 
     def get_bgp_neighbors_detail(self, **kwargs):
-        """
-            not implemented yet
-
-        :param kwargs:
-        :return:
-        """
-        raise NotImplementedError
-
-    def get_config(self, **kwargs):
         """
             not implemented yet
 
