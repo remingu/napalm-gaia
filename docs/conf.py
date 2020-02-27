@@ -18,11 +18,11 @@ sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
 project = 'napalm-gaia'
-copyright = '2020, remingu'
-author = 'remingu'
+copyright = '2020, Daniel Schlifka(remingu)'
+author = 'Daniel Schlifka'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.2rc3'
+release = '0.0.3'
 
 
 # -- General configuration ---------------------------------------------------
@@ -30,7 +30,7 @@ release = '0.0.2rc3'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [ 'sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
