@@ -6,7 +6,7 @@ from napalm.base.test import conftest as parent_conftest
 from napalm.base.test.double import BaseTestDouble
 from napalm.base.utils import py23_compat
 from napalm_gaiaos import gaiaos
-
+import copy
 
 
 
@@ -31,6 +31,7 @@ def pytest_generate_tests(metafunc):
 
 class PatchedGaiaDriver(gaiaos.GaiaOSDriver):
     def __init__(self, hostname, username, password, timeout,  **optional_args):
+
         super().__init__(hostname, username, password, timeout, optional_args)
         self.patched_attrs = ['device']
         self.device = FakeGaiaDevice()
