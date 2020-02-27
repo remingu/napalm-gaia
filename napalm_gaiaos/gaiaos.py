@@ -210,6 +210,7 @@ class GaiaOSDriver(NetworkDriver):
                 "
             
             Retrieve options:
+
                 all                  - display full configuration
             
                 aaa                  - display aaa configuration commands
@@ -278,6 +279,7 @@ class GaiaOSDriver(NetworkDriver):
                 user                 - Display user configuration commands
                 vpnt                 - Display VPN tunnel configuration
                 web                  - Displays Web configuration
+
         """
         opt = retrieve.lower()
         command = 'show configuration'
