@@ -33,6 +33,8 @@ class GaiaOSDriver(NetworkDriver):
         self.optional_args = optional_args
         if 'secret' in optional_args:
             self.expert_password = optional_args['secret']
+        else:
+            self.expert_password = '\n'
 
     def open(self):
         device_type = 'checkpoint_gaia'

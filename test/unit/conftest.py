@@ -49,6 +49,11 @@ class PatchedGaiaDriver(gaiaos.GaiaOSDriver):
         """Connect device."""
         pass
 
+    def _exit_expert_mode(self) -> bool:
+        return True
+
+    def _enter_expert_mode(self) -> bool:
+        return True
 
 class FakeGaiaDevice(BaseTestDouble):
     """gaia test double."""
