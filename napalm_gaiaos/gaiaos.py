@@ -31,8 +31,9 @@ class GaiaOSDriver(NetworkDriver):
         self.expert_password = ''
         self.timeout = timeout
         self.optional_args = optional_args
-        if 'secret' in optional_args:
-            self.expert_password = optional_args['secret']
+        if optional_args is not None:
+            if optional_args['secret']:
+                self.expert_password = optional_args['secret']
 
     def open(self):
         device_type = 'checkpoint_gaia'
@@ -197,7 +198,95 @@ class GaiaOSDriver(NetworkDriver):
                                     'state': str(table_entry.group(5))}
                                    )
         return arp_entries
-
+      
+    def get_config(self, retrieve='all') -> str:
+        """
+        Get host configuration. Returns a string delimited with a \n for further parsing. 
+        Configuration can be retrieved at once or as logical part.
+            
+            For example:: device.get_config(retrieve='user')
+                "
+                    set user admin shell /etc/cli.sh
+                    set user admin password-hash *******************
+                "
+            
+            Retrieve options:
+                all                  - display full configuration
+            
+                aaa                  - display aaa configuration commands
+                aggregate            - Display Route Aggregation configuration commands
+                allowed-client       - Displays Allowed Clients configuration
+                arp                  - Display ARP configuration commands
+                as                   - Show Autonomous System Number configuration commands
+                backup-scheduled     - Display scheduled backup configuration commands
+                bgp                  - Display BGP configuration commands
+                bonding              - display bonding configuration commands
+                bootp                - Show BOOTP/DHCP Relay configuration commands
+                bridging             - display bridging configuration commands
+                clienv               - display CLI environment configuration commands
+                command              - extended commands configuration commands
+                core-dump            - Display core-dump configuration commands
+                cron                 - display cron configuration commands
+                dhcp-client          - display dhcp client configuration commands
+                dhcp-server          - display dhcp configuration commands
+                dns                  - display dns configuration commands
+                domainname           - display domainname configuration commands
+                edition              - display edition configuration commands
+                expert-password      - Displays expert password configuration
+                format               - display format configuration commands
+                group                - display group configuration commands
+                host                 - Display host configuration commands
+                hostname             - Display hostname configuration commands
+                igmp                 - Display IGMP configuration commands
+                inbound-route-filter - Display Inbound Route Filter configuration commands
+                installer            - installer configuration commands
+                interface            - interface configuration commands
+                interface-name       - Interface naming configuration commands
+                iphelper             - Display IP Broadcast Helper configuration commands
+                ipv6                 - Display IPv6 routing configuration commands
+                ipv6-state           - Display IPv6 configuration commands
+                kernel-routes        - Show configuration commands for kernel routes
+                lcd                  - display lcd configuration commands
+                mail-notification    - display format configuration commands
+                management           - management configuration commands
+                max-path-splits      - Show max-path-splits configuration commands
+                message              - Display message configuration commands
+                net-access           - Displays network access configuration
+                netflow              - netflow configuration commands
+                ntp                  - display ntp configuration commands
+                ospf                 - Display OSPFv2 configuration commands
+                password-controls    - display password-controls configuration commands
+                pim                  - Display PIM configuration commands
+                ping                 - Display ping (for static routes) configuration commands
+                protocol-rank        - Show protocol ranks configuration commands
+                proxy                - display proxy configuration commands
+                rba                  - Display rba configuration commands
+                rdisc                - Display ICMP Router Discovery configuration commands
+                rip                  - Display RIP configuration commands
+                route-redistribution - Display route redistribution configuration commands
+                routedsyslog         - Show Routing Daemon syslog configuration commands
+                routemap             - Display configuration commands for a specific Route Map
+                routemaps            - Display Route Map configuration commands
+                router-id            - Show Router ID configuration commands
+                router-options       - Show Router Options configuration commands
+                snmp                 - SNMP configuration commands
+                static-mroute        - Display static multicast route configuration commands
+                static-route         - Display IPv4 static route configuration commands
+                syslog               - Display syslog configuration commands
+                timezone             - Timezone configuration commands
+                trace                - Show Trace configuration commands
+                tracefile            - Show Tracefile configuration commands
+                user                 - Display user configuration commands
+                vpnt                 - Display VPN tunnel configuration
+                web                  - Displays Web configuration
+        """
+        opt = retrieve.lower()
+        command = 'show configuration'
+        if opt != 'all':
+            command += ' {}'.format(opt)
+        output = self.device.send_command(command)
+        return output
+    
     def get_interfaces(self) -> dict:
         """
             | Get interface details.
@@ -319,7 +408,42 @@ class GaiaOSDriver(NetworkDriver):
         except Exception as e:
             raise Exception(e)
         return interface_table
-
+    
+    def get_virtual_systems(self) -> dict:
+        """
+            | Get virtual systems information.   
+            | Returns dictionary with VS ID as a key and VS NAME as a value.
+            
+            :return: dict
+            
+            example::
+                {
+                    0:'0',
+                    6:'dummy-vsx-instance',
+                }
+        """
+        if self._check_vsx_state() is False:
+            raise RuntimeError('VSX not enabled')
+        if self._check_expert_mode():
+            vs_regex = r'VSID:\s+\d+|Name:\s+.*'
+            command = 'vsx stat -l'
+            output = self.device.send_command(command)            
+            match = re.findall(vs_regex, output, re.M)
+            vals = [val.split(':')[1].strip() for val in match]
+            items = list(map(list, zip(vals[::2], vals[1::2])))
+            vs_id = {item[0]: item[1] for item in items}
+        else:
+            vs_id = {}
+            vs_regex = r'(?:(\d+)\s+([A-z0-9_-]+)+)'
+            command = 'show virtual-system all'
+            output = self.device.send_command(command)
+            for match in re.finditer(vs_regex, output, re.M):
+                vs_id[match.group(1)] = match.group(2)
+        if "0" in vs_id.keys():
+            return vs_id
+        else:
+            raise RuntimeError('cannot get VS list')
+    
     def _enter_expert_mode(self) -> bool:
         """
             :return: bool
@@ -337,8 +461,6 @@ class GaiaOSDriver(NetworkDriver):
             raise ConnectionClosedException(str(e))
         except Exception as e:
             raise RuntimeError(e)
-
-
 
     def _exit_expert_mode(self) -> bool:
         """
@@ -516,7 +638,7 @@ class GaiaOSDriver(NetworkDriver):
                 return response
         else:
             raise ValueError('invalid host format')
-
+    
     def _is_valid_hostname(self, hostname) -> bool:
         if ipaddress.ip_address(hostname):
             return True
@@ -571,7 +693,42 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise TypeError('Expected <class \'int\'> not a {}'.format(type(count)))
 
-
+    def _check_vsx_state(self) -> bool:
+        """
+            :return: bool
+        """
+        if self._check_expert_mode():
+            vsx_regex = 'VSX is not supported'
+            command = 'vsx get' 
+        else:
+            vsx_regex = '[Dd]isabled'
+            command = 'show vsx'
+        output = self.device.send_command(command)
+        if not vsx_regex in output:
+            return True
+        else:
+            return False
+    
+    def _set_virtual_system(self, vsid: int) -> bool:
+        """
+            | Switch to VSX context. Raises RuntimeError if failed.
+            
+            :return: bool
+        """
+        if self._check_vsx_state() is False:
+            raise RuntimeError('VSX not enabled')   
+        if self._check_expert_mode() is True:
+            command = 'vsenv {}'.format(vsid)
+        else:
+            command = 'set virtual-system {}'.format(vsid)
+        vsid_regex = r'(?<=:){}'.format(vsid)
+        expect_regex = r'(?<=:)\d+'
+        output = self.device.send_command(command, expect_regex)
+        if re.search(vsid_regex, output):
+            return True
+        else:
+            raise RuntimeError('cannot access virtual-system')
+    
     ##########################################################################################
     # """                               the tbd section                                  """ #
     ##########################################################################################
