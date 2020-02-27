@@ -198,7 +198,7 @@ class GaiaOSDriver(NetworkDriver):
                                    )
         return arp_entries
       
-    def get_config(self, retrieve='all') -> str:
+    def get_config(self, retrieve='all') -> dict:
         """
         Get host configuration. Returns a string delimited with a \n for further parsing. 
         Configuration can be retrieved at once or as logical part.
@@ -211,6 +211,7 @@ class GaiaOSDriver(NetworkDriver):
             
             Retrieve options:
 
+                <pre>
                 all                  - display full configuration
             
                 aaa                  - display aaa configuration commands
@@ -280,13 +281,16 @@ class GaiaOSDriver(NetworkDriver):
                 vpnt                 - Display VPN tunnel configuration
                 web                  - Displays Web configuration
 
+                </pre>
+
         """
         opt = retrieve.lower()
         command = 'show configuration'
         if opt != 'all':
             command += ' {}'.format(opt)
         output = self.device.send_command(command)
-        return output
+        tmpdict = {'running': output, 'candidate': '', 'startup' : ''}
+        return tmpdict
     
     def get_interfaces(self) -> dict:
         """
@@ -369,7 +373,7 @@ class GaiaOSDriver(NetworkDriver):
             pass
         return interface_table
 
-    def get_interfaces_ip(self):
+    def get_interfaces_ip(self) -> dict:
         """
             | Get interface ip details.
             | Returns a dict of dicts
