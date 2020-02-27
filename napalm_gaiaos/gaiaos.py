@@ -209,77 +209,78 @@ class GaiaOSDriver(NetworkDriver):
                     set user admin password-hash *******************
                 "
             
-            Retrieve options:
+            Retrieve options::
 
 
-                | all                  - display full configuration
-                |
-                | aaa                  - display aaa configuration commands
-                | aggregate            - Display Route Aggregation configuration commands
-                | allowed-client       - Displays Allowed Clients configuration
-                | arp                  - Display ARP configuration commands
-                | as                   - Show Autonomous System Number configuration commands
-                | backup-scheduled     - Display scheduled backup configuration commands
-                | bgp                  - Display BGP configuration commands
-                | bonding              - display bonding configuration commands
-                | bootp                - Show BOOTP/DHCP Relay configuration commands
-                | bridging             - display bridging configuration commands
-                | clienv               - display CLI environment configuration commands
-                | command              - extended commands configuration commands
-                | core-dump            - Display core-dump configuration commands
-                | cron                 - display cron configuration commands
-                | dhcp-client          - display dhcp client configuration commands
-                | dhcp-server          - display dhcp configuration commands
-                | dns                  - display dns configuration commands
-                | domainname           - display domainname configuration commands
-                | edition              - display edition configuration commands
-                | expert-password      - Displays expert password configuration
-                | format               - display format configuration commands
-                | group                - display group configuration commands
-                | host                 - Display host configuration commands
-                | hostname             - Display hostname configuration commands
-                | igmp                 - Display IGMP configuration commands
-                | inbound-route-filter - Display Inbound Route Filter configuration commands
-                | installer            - installer configuration commands
-                | interface            - interface configuration commands
-                | interface-name       - Interface naming configuration commands
-                | iphelper             - Display IP Broadcast Helper configuration commands
-                | ipv6                 - Display IPv6 routing configuration commands
-                | ipv6-state           - Display IPv6 configuration commands
-                | kernel-routes        - Show configuration commands for kernel routes
-                | lcd                  - display lcd configuration commands
-                | mail-notification    - display format configuration commands
-                | management           - management configuration commands
-                | max-path-splits      - Show max-path-splits configuration commands
-                | message              - Display message configuration commands
-                | net-access           - Displays network access configuration
-                | netflow              - netflow configuration commands
-                | ntp                  - display ntp configuration commands
-                | ospf                 - Display OSPFv2 configuration commands
-                | password-controls    - display password-controls configuration commands
-                | pim                  - Display PIM configuration commands
-                | ping                 - Display ping (for static routes) configuration commands
-                | protocol-rank        - Show protocol ranks configuration commands
-                | proxy                - display proxy configuration commands
-                | rba                  - Display rba configuration commands
-                | rdisc                - Display ICMP Router Discovery configuration commands
-                | rip                  - Display RIP configuration commands
-                | route-redistribution - Display route redistribution configuration commands
-                | routedsyslog         - Show Routing Daemon syslog configuration commands
-                | routemap             - Display configuration commands for a specific Route Map
-                | routemaps            - Display Route Map configuration commands
-                | router-id            - Show Router ID configuration commands
-                | router-options       - Show Router Options configuration commands
-                | snmp                 - SNMP configuration commands
-                | static-mroute        - Display static multicast route configuration commands
-                | static-route         - Display IPv4 static route configuration commands
-                | syslog               - Display syslog configuration commands
-                | timezone             - Timezone configuration commands
-                | trace                - Show Trace configuration commands
-                | tracefile            - Show Tracefile configuration commands
-                | user                 - Display user configuration commands
-                | vpnt                 - Display VPN tunnel configuration
-                | web                  - Displays Web configuration
+                all                  - display full configuration
+
+                aaa                  - display aaa configuration commands
+                aggregate            - Display Route Aggregation configuration commands
+                allowed-client       - Displays Allowed Clients configuration
+                arp                  - Display ARP configuration commands
+                as                   - Show Autonomous System Number configuration commands
+                backup-scheduled     - Display scheduled backup configuration commands
+                bgp                  - Display BGP configuration commands
+                bonding              - display bonding configuration commands
+                bootp                - Show BOOTP/DHCP Relay configuration commands
+                bridging             - display bridging configuration commands
+                clienv               - display CLI environment configuration commands
+                command              - extended commands configuration commands
+                core-dump            - Display core-dump configuration commands
+                cron                 - display cron configuration commands
+                dhcp-client          - display dhcp client configuration commands
+                dhcp-server          - display dhcp configuration commands
+                dns                  - display dns configuration commands
+                domainname           - display domainname configuration commands
+                edition              - display edition configuration commands
+                expert-password      - Displays expert password configuration
+                format               - display format configuration commands
+                group                - display group configuration commands
+                host                 - Display host configuration commands
+                hostname             - Display hostname configuration commands
+                igmp                 - Display IGMP configuration commands
+                inbound-route-filter - Display Inbound Route Filter configuration commands
+                installer            - installer configuration commands
+                interface            - interface configuration commands
+                interface-name       - Interface naming configuration commands
+                iphelper             - Display IP Broadcast Helper configuration commands
+                ipv6                 - Display IPv6 routing configuration commands
+                ipv6-state           - Display IPv6 configuration commands
+                kernel-routes        - Show configuration commands for kernel routes
+                lcd                  - display lcd configuration commands
+                mail-notification    - display format configuration commands
+                management           - management configuration commands
+                max-path-splits      - Show max-path-splits configuration commands
+                message              - Display message configuration commands
+                net-access           - Displays network access configuration
+                netflow              - netflow configuration commands
+                ntp                  - display ntp configuration commands
+                ospf                 - Display OSPFv2 configuration commands
+                password-controls    - display password-controls configuration commands
+                pim                  - Display PIM configuration commands
+                ping                 - Display ping (for static routes) configuration commands
+                protocol-rank        - Show protocol ranks configuration commands
+                proxy                - display proxy configuration commands
+                rba                  - Display rba configuration commands
+                rdisc                - Display ICMP Router Discovery configuration commands
+                rip                  - Display RIP configuration commands
+                route-redistribution - Display route redistribution configuration commands
+                routedsyslog         - Show Routing Daemon syslog configuration commands
+                routemap             - Display configuration commands for a specific Route Map
+                routemaps            - Display Route Map configuration commands
+                router-id            - Show Router ID configuration commands
+                router-options       - Show Router Options configuration commands
+                snmp                 - SNMP configuration commands
+                static-mroute        - Display static multicast route configuration commands
+                static-route         - Display IPv4 static route configuration commands
+                syslog               - Display syslog configuration commands
+                timezone             - Timezone configuration commands
+                trace                - Show Trace configuration commands
+                tracefile            - Show Tracefile configuration commands
+                user                 - Display user configuration commands
+                vpnt                 - Display VPN tunnel configuration
+                web                  - Displays Web configuration
+
 
 
         """
