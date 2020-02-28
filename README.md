@@ -21,12 +21,12 @@ untested yet:
  - R77.30 SPLAT
  
 Limitations:
- - vsx context switches are not implemented yet(feature is in work and will come asap, we need it aswell)
+ - vsx context switches are not implemented yet
  
  
 ## install
  
-we're preparing pypi deployment at the moment, meanwhile you can install testpackages via easy_install/pip.
+    pip install napalm-gaia
 
 ## documentation
 
