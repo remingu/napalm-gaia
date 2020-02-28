@@ -10,7 +10,7 @@ This driver is not slightly feature complete and must be considered as experimen
 documented functions were successfully tested against:
  - R77.30 Gaia
  - R80.10 Gaia
- - R80.20 Gaia
+ - R80.20 Gaia  
  - R80.30 Gaia
  
 untested yet:
