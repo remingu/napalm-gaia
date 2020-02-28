@@ -128,17 +128,22 @@ class GaiaOSDriver(NetworkDriver):
         )
         users = {}
         command = 'show users'
-        output = self.device.send_command(command)
-        for match in re.finditer(username_regex, output, re.M):
-            users[match.group(1)] = {
-                'uid': match.group(2),
-                'gid': match.group(3),
-                'homedir': match.group(4),
-                'shell': match.group(5),
-                'name': match.group(6),
-                'privileges': match.group(7),
-            }
-        return users
+        try:
+            output = self.device.send_command(command)
+            for match in re.finditer(username_regex, output, re.M):
+                users[match.group(1)] = {
+                    'uid': match.group(2),
+                    'gid': match.group(3),
+                    'homedir': match.group(4),
+                    'shell': match.group(5),
+                    'name': match.group(6),
+                    'privileges': match.group(7),
+                }
+            return users
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(e)
 
     def get_arp_table(self, vrf='') -> list:
         """
@@ -300,8 +305,13 @@ class GaiaOSDriver(NetworkDriver):
         command = 'show configuration'
         if opt != 'all':
             command += ' {}'.format(opt)
-        output = self.device.send_command(command)
-        retdict = {'running': output, 'candidate': '', 'startup': ''}
+        try:
+            output = self.device.send_command(command)
+            retdict = {'running': output, 'candidate': '', 'startup': ''}
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            RuntimeError(e)
         return retdict
     
     def get_interfaces(self) -> dict:
@@ -348,8 +358,6 @@ class GaiaOSDriver(NetworkDriver):
         try:
             output = self.device.send_command_timing('show interfaces\t', max_loops=2)
             interface_list = output.split()
-            time.sleep(0.2)
-
             for interface in interface_list:
                 interface_table[interface] = {}
                 interface_table[interface]['last_flapped'] = -1.0
@@ -381,8 +389,8 @@ class GaiaOSDriver(NetworkDriver):
                         elif cmd == 'mtu':
                             interface_table[interface][command_options[cmd]] = output[1]
 
-        except:
-            pass
+        except Exception as e:
+            raise RuntimeError(e)
         return interface_table
 
     def get_interfaces_ip(self):
@@ -508,6 +516,8 @@ class GaiaOSDriver(NetworkDriver):
                 return False
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(e)
 
     def send_clish_cmd(self, cmd: str) -> str:
         """
@@ -521,6 +531,8 @@ class GaiaOSDriver(NetworkDriver):
             return output
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(e)
 
     def send_expert_cmd(self, cmd: str) -> str:
         """
