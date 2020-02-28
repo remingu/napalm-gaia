@@ -15,6 +15,8 @@ documented functions were successfully tested against:
  
 untested yet:
  - R80.40
+ 
+not supported
  - R77.30 SPLAT
  
 Limitations:
