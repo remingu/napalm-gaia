@@ -128,17 +128,22 @@ class GaiaOSDriver(NetworkDriver):
         )
         users = {}
         command = 'show users'
-        output = self.device.send_command(command)
-        for match in re.finditer(username_regex, output, re.M):
-            users[match.group(1)] = {
-                'uid': match.group(2),
-                'gid': match.group(3),
-                'homedir': match.group(4),
-                'shell': match.group(5),
-                'name': match.group(6),
-                'privileges': match.group(7),
-            }
-        return users
+        try:
+            output = self.device.send_command(command)
+            for match in re.finditer(username_regex, output, re.M):
+                users[match.group(1)] = {
+                    'uid': match.group(2),
+                    'gid': match.group(3),
+                    'homedir': match.group(4),
+                    'shell': match.group(5),
+                    'name': match.group(6),
+                    'privileges': match.group(7),
+                }
+            return users
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(e)
 
     def get_arp_table(self, vrf='') -> list:
         """
@@ -200,20 +205,34 @@ class GaiaOSDriver(NetworkDriver):
       
     def get_config(self, retrieve='all') -> dict:
         """
-        Get host configuration. Returns a string delimited with a \n for further parsing. 
+        Get host configuration. Returns a string delimited with a '\n' for further parsing.
         Configuration can be retrieved at once or as logical part.
+
+        :return: dict
+
             
-            For example:: device.get_config(retrieve='user')
-                "
-                    set user admin shell /etc/cli.sh
-                    set user admin password-hash *******************
-                "
-            
-            Retrieve options:: 
+            For example::
+
+                device.get_config(retrieve='user')
+
+                {
+                    'running': '
+                        set user admin shell /etc/cli.sh
+                        set user admin password-hash $1$aWTXGUmr$1r1Ls428oJg2gFwMcKJdO0
+                        set user monitor shell /etc/cli.sh
+                        set user monitor password-hash *
+
+                    ',
+                    'candidate': '',
+                    'startup' : ''
+                }
+
+
+            Retrieve options::
 
 
                 all                  - display full configuration
-
+            
                 aaa                  - display aaa configuration commands
                 aggregate            - Display Route Aggregation configuration commands
                 allowed-client       - Displays Allowed Clients configuration
@@ -281,16 +300,19 @@ class GaiaOSDriver(NetworkDriver):
                 vpnt                 - Display VPN tunnel configuration
                 web                  - Displays Web configuration
 
-
-
         """
         opt = retrieve.lower()
         command = 'show configuration'
         if opt != 'all':
             command += ' {}'.format(opt)
-        output = self.device.send_command(command)
-        tmpdict = {'running': output, 'candidate': '', 'startup' : ''}
-        return tmpdict
+        try:
+            output = self.device.send_command(command)
+            retdict = {'running': output, 'candidate': '', 'startup': ''}
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            RuntimeError(e)
+        return retdict
     
     def get_interfaces(self) -> dict:
         """
@@ -336,8 +358,6 @@ class GaiaOSDriver(NetworkDriver):
         try:
             output = self.device.send_command_timing('show interfaces\t', max_loops=2)
             interface_list = output.split()
-            time.sleep(0.2)
-
             for interface in interface_list:
                 interface_table[interface] = {}
                 interface_table[interface]['last_flapped'] = -1.0
@@ -369,11 +389,11 @@ class GaiaOSDriver(NetworkDriver):
                         elif cmd == 'mtu':
                             interface_table[interface][command_options[cmd]] = output[1]
 
-        except:
-            pass
+        except Exception as e:
+            raise RuntimeError(e)
         return interface_table
 
-    def get_interfaces_ip(self) -> dict:
+    def get_interfaces_ip(self):
         """
             | Get interface ip details.
             | Returns a dict of dicts
@@ -496,6 +516,8 @@ class GaiaOSDriver(NetworkDriver):
                 return False
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(e)
 
     def send_clish_cmd(self, cmd: str) -> str:
         """
@@ -509,6 +531,8 @@ class GaiaOSDriver(NetworkDriver):
             return output
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(e)
 
     def send_expert_cmd(self, cmd: str) -> str:
         """
