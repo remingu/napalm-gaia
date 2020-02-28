@@ -5,7 +5,7 @@ Certain commands will require expert password. <br>
 This driver is not slightly feature complete and must be considered as experimental, check the docs what is possible at the moment.
 
 
-## Compability
+## Compatibility
 
 documented functions were successfully tested against:
  - R77.30 Gaia
