@@ -225,6 +225,7 @@ class GaiaOSDriver(NetworkDriver):
 
             Retrieve options::
 
+
                 all                  - display full configuration
             
                 aaa                  - display aaa configuration commands
