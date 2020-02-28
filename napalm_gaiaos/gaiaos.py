@@ -731,10 +731,10 @@ class GaiaOSDriver(NetworkDriver):
             vsx_regex = 'VSX is not supported'
             command = 'vsx get' 
         else:
-            vsx_regex = '[Dd]isabled'
+            vsx_regex = 'Disabled'
             command = 'show vsx'
         output = self.device.send_command(command)
-        if not vsx_regex in output:
+        if not re.search(vsx_regex, output, re.I):
             return True
         else:
             return False
