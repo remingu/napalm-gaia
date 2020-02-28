@@ -200,7 +200,7 @@ class GaiaOSDriver(NetworkDriver):
       
     def get_config(self, retrieve='all') -> dict:
         """
-        Get host configuration. Returns a string delimited with a \\n for further parsing.
+        Get host configuration. Returns a string delimited with a '\n' for further parsing.
         Configuration can be retrieved at once or as logical part.
 
         :return: dict
