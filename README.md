@@ -37,7 +37,6 @@ https://napalm-gaia.readthedocs.io/en/latest
 
 You can reach us via [networktocode](https://networktocode.herokuapp.com/) #napalm-gaia
 
-
 ## simple test
     #!/usr/bin/env python3
     from napalm import get_network_driver    
