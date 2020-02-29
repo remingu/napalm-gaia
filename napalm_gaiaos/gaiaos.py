@@ -171,7 +171,7 @@ class GaiaOSDriver(NetworkDriver):
                                 command = r'cat /home/{0}/.ssh/{1}'.format(user, file)
                                 output = self.device.send_command(command)
                                 if re.match(r'cat.*$', output) is None and re.match(r'$', output) is None:
-                                    users[user]['sshkeys'].append(str(output).rstrip())
+                                    users[user]['sshkeys'].append(str(output.split('\n')))
                                     i = True
                                 else:
                                     pass
@@ -182,8 +182,6 @@ class GaiaOSDriver(NetworkDriver):
             else:
                 for user in users:
                     users[user]['sshkeys'] = ['']
-
-
             return users
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
