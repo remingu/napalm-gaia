@@ -83,10 +83,12 @@ class GaiaOSDriver(NetworkDriver):
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
     
-    def get_users(self) -> dict:
+    def get_users(self, **kwargs) -> dict:
         """
             | Returns a dictionary with the configured users.
             | The keys of the main dictionary represents the username.
+            | Checkpoint uses RBAC and does not know about privilege levels
+            | therefore level always returns a level of 15
             | The values represent the details of the user,
             | represented by the following keys:
 
@@ -96,6 +98,8 @@ class GaiaOSDriver(NetworkDriver):
                 * shell: str
                 * name: str
                 * privileges: str
+                * ssh-keys
+                * level : 15
 
             :return: dict
 
@@ -109,13 +113,18 @@ class GaiaOSDriver(NetworkDriver):
                         'shell': '/etc/cli.sh',
                         'name': 'n/a',
                         'privileges': 'Access to Expert features'},
+                        'level' : 15,
+                        'password' :
+                        'sshkeys' : []}
                     'monitor':                        {
                         'uid': '102',
                         'gid': '100',
                         'homedir': '/home/monitor',
                         'shell': '/etc/cli.sh',
                         'name': 'Monitor',
-                        'privileges': 'None'}
+                        'privileges': 'None',
+                        'level' : 15,
+                        'sshkeys' : []}
                 }
 
 
