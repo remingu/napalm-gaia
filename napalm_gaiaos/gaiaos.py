@@ -160,18 +160,25 @@ class GaiaOSDriver(NetworkDriver):
             output = self.device.send_command(command)
             for match in re.finditer(pwdhash_regex, output, re.M):
                 users[match.group(1)]['password'] = match.group(2)
-
             if 'retrieve' in kwargs:
-
                 if kwargs['retrieve'] == 'all':
-                    if self._check_expert_mode() is False:
-                        self._enter_expert_mode()
-                        command = 'grep {0} /home/{0}/.ssh/authorized_keys; grep {0} /home/{0}/.ssh/authorized_keys2'
-                        output = self.device.send_command(command)
-
-
+                    if self._enter_expert_mode() is True:
+                        files = ['authorized_keys', 'authorized_keys2']
+                        for user in users:
+                            users[user]['sshkeys'] = []
+                            i = False
+                            for file in files:
+                                command = r'cat /home/{0}/.ssh/{1}'.format(user, file)
+                                output = self.device.send_command(command)
+                                if re.match(r'cat.*$', output) is None and re.match(r'$', output) is None:
+                                    users[user]['sshkeys'].append(str(output).rstrip())
+                                    i = True
+                                else:
+                                    pass
+                            if i is False:
+                                users[user]['sshkeys'].append('')
                     else:
-                        pass
+                        raise RuntimeError('unable to enter expert-mode')
             else:
                 for user in users:
                     users[user]['sshkeys'] = ['']
