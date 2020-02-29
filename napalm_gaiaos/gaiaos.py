@@ -89,8 +89,13 @@ class GaiaOSDriver(NetworkDriver):
             | The keys of the main dictionary represents the username.
             | Checkpoint uses RBAC and does not know about privilege levels
             | therefore level always returns a level of 15
+            | instead a field 'privileges' was added containing additional user-role information
+            |
+            | ssh-keys will only fetched with option retrieve='all' (requires expert password)
+            | otherwise ssh-keys will return a list containing an empty string
             | The values represent the details of the user,
             | represented by the following keys:
+
 
                 * uid: int
                 * gid: int
@@ -98,8 +103,8 @@ class GaiaOSDriver(NetworkDriver):
                 * shell: str
                 * name: str
                 * privileges: str
-                * ssh-keys
-                * level : 15
+                * sshkeys: list[str,]
+                * level : 15,
 
             :return: dict
 
@@ -114,8 +119,8 @@ class GaiaOSDriver(NetworkDriver):
                         'name': 'n/a',
                         'privileges': 'Access to Expert features'},
                         'level' : 15,
-                        'password' :
-                        'sshkeys' : []}
+                        'password' : '$1$aWTXGUmr$1r1Ls428oJg2gFwMcKJdO0'
+                        'sshkeys' : ['',]}
                     'monitor':                        {
                         'uid': '102',
                         'gid': '100',
@@ -124,16 +129,19 @@ class GaiaOSDriver(NetworkDriver):
                         'name': 'Monitor',
                         'privileges': 'None',
                         'level' : 15,
-                        'sshkeys' : []}
+                        'password' : '*'
+                        'sshkeys' : ['',]}
                 }
 
 
         """
-
         username_regex = (
             r'^([A-z0-9_-]{1,32})\s+(\d+)\s+(\d+)\s+([/A-z0-9_-]{1,})\s+'
             r'([./A-z0-9_-]{1,})\s+((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-])\s+'
             r'((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-]).+?$'
+        )
+        pwdhash_regex = (
+            r'^[a-z]{3}\s[a-z]{4}\s([A-z][A-z0-9_-]+)\s.*hash\s(.*)$'
         )
         users = {}
         command = 'show users'
@@ -148,6 +156,27 @@ class GaiaOSDriver(NetworkDriver):
                     'name': match.group(6),
                     'privileges': match.group(7),
                 }
+            command = 'show configuration user'
+            output = self.device.send_command(command)
+            for match in re.finditer(pwdhash_regex, output, re.M):
+                users[match.group(1)]['password'] = match.group(2)
+
+            if 'retrieve' in kwargs:
+
+                if kwargs['retrieve'] == 'all':
+                    if self._check_expert_mode() is False:
+                        self._enter_expert_mode()
+                        command = 'grep {0} /home/{0}/.ssh/authorized_keys; grep {0} /home/{0}/.ssh/authorized_keys2'
+                        output = self.device.send_command(command)
+                        print(type(output))
+
+                    else:
+                        pass
+            else:
+                for user in users:
+                    users[user]['sshkeys'] = ['']
+
+
             return users
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
