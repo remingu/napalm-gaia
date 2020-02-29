@@ -168,7 +168,7 @@ class GaiaOSDriver(NetworkDriver):
                         self._enter_expert_mode()
                         command = 'grep {0} /home/{0}/.ssh/authorized_keys; grep {0} /home/{0}/.ssh/authorized_keys2'
                         output = self.device.send_command(command)
-                        print(type(output))
+
 
                     else:
                         pass
