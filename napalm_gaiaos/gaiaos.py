@@ -6,10 +6,10 @@ import socket
 import ipaddress
 import napalm
 from napalm.base.base import NetworkDriver
-from napalm.base.exceptions import ConnectionException, SessionLockedException, \
+from napalm.base.exceptions import ConnectionException, SessionLockedException,\
                                    MergeConfigException, ReplaceConfigException,\
-                                   CommandErrorException, ConnectionClosedException
-
+                                   CommandErrorException, ConnectionClosedException,\
+                                   ValidationException
 
 class GaiaOSDriver(NetworkDriver):
     """
@@ -490,28 +490,32 @@ class GaiaOSDriver(NetworkDriver):
                   |  6:'dummy-vsx-instance',
                 }
         """
-        if self._check_vsx_state() is False:
-            raise RuntimeError('VSX not enabled')
-        if self._check_expert_mode():
-            vs_regex = r'VSID:\s+\d+|Name:\s+.*'
-            command = 'vsx stat -l'
-            output = self.device.send_command(command)            
-            match = re.findall(vs_regex, output, re.M)
-            vals = [val.split(':')[1].strip() for val in match]
-            items = list(map(list, zip(vals[::2], vals[1::2])))
-            vs_id = {item[0]: item[1] for item in items}
-        else:
-            vs_id = {}
-            vs_regex = r'(?:(\d+)\s+([A-z0-9_-]+)+)'
-            command = 'show virtual-system all'
-            output = self.device.send_command(command)
-            for match in re.finditer(vs_regex, output, re.M):
-                vs_id[match.group(1)] = match.group(2)
-        if "0" in vs_id.keys():
-            return vs_id
-        else:
-            raise RuntimeError('cannot get VS list')
-    
+        try:
+            if self._check_vsx_state() is True:
+                if self._check_expert_mode():
+                    vs_regex = r'VSID:\s+\d+|Name:\s+.*'
+                    command = 'vsx stat -l'
+                    output = self.device.send_command(command)
+                    match = re.findall(vs_regex, output, re.M)
+                    vals = [val.split(':')[1].strip() for val in match]
+                    items = list(map(list, zip(vals[::2], vals[1::2])))
+                    vs_id = {item[0]: item[1] for item in items}
+                else:
+                    vs_id = {}
+                    vs_regex = r'(?:(\d+)\s+([A-z0-9_-]+)+)'
+                    command = 'show virtual-system all'
+                    output = self.device.send_command(command)
+                    for match in re.finditer(vs_regex, output, re.M):
+                        vs_id[match.group(1)] = match.group(2)
+                if "0" in vs_id.keys():
+                    return vs_id
+                else:
+                    raise CommandErrorException('cannot get VS list')
+            else:
+                raise ValidationException('VSX not enabled')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+
     def _enter_expert_mode(self) -> bool:
         """
             :return: bool
@@ -776,11 +780,14 @@ class GaiaOSDriver(NetworkDriver):
         else:
             vsx_regex = 'Disabled'
             command = 'show vsx'
-        output = self.device.send_command(command)
-        if not re.search(vsx_regex, output, re.I):
-            return True
-        else:
-            return False
+        try:
+            output = self.device.send_command(command)
+            if not re.search(vsx_regex, output, re.I):
+                return True
+            else:
+                return False
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
     
     def _set_virtual_system(self, vsid: int) -> bool:
         """
@@ -788,20 +795,24 @@ class GaiaOSDriver(NetworkDriver):
             
             :return: bool
         """
-        if self._check_vsx_state() is False:
-            raise RuntimeError('VSX not enabled')   
-        if self._check_expert_mode() is True:
-            command = 'vsenv {}'.format(vsid)
-        else:
-            command = 'set virtual-system {}'.format(vsid)
-        vsid_regex = r'(?<=:){}'.format(vsid)
-        expect_regex = r'(?<=:)\d+'
-        output = self.device.send_command(command, expect_regex)
-        if re.search(vsid_regex, output):
-            return True
-        else:
-            raise RuntimeError('cannot access virtual-system')
-    
+        try:
+            if self._check_vsx_state() is True:
+                if self._check_expert_mode() is True:
+                    command = 'vsenv {}'.format(vsid)
+                else:
+                    command = 'set virtual-system {}'.format(vsid)
+                vsid_regex = r'(?<=:){}'.format(vsid)
+                expect_regex = r'(?<=:)\d+'
+                output = self.device.send_command(command, expect_regex)
+                if re.search(vsid_regex, output):
+                    return True
+                else:
+                    raise CommandErrorException('cannot access virtual-system')
+            else:
+                raise ValidationException('VSX not enabled')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+
     ##########################################################################################
     # """                               the tbd section                                  """ #
     ##########################################################################################
