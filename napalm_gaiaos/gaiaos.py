@@ -715,7 +715,16 @@ class GaiaOSDriver(NetworkDriver):
                 return response
         else:
             raise ValueError('invalid host format')
-    
+
+    def get_facts(self):
+        """
+            not implemented yet
+
+        :param kwargs:
+        :return:
+        """
+        raise NotImplementedError
+
     def _is_valid_hostname(self, hostname) -> bool:
         if ipaddress.ip_address(hostname):
             return True
@@ -853,14 +862,7 @@ class GaiaOSDriver(NetworkDriver):
         """
         raise NotImplementedError
 
-    def get_facts(self):
-        """
-            not implemented yet
 
-        :param kwargs:
-        :return:
-        """
-        raise NotImplementedError
 
     def get_firewall_policies(self):
         """
