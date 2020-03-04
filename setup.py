@@ -17,15 +17,15 @@ with open(path.join(lpath, 'requirements.txt'), "r") as fh:
 
 setup(
     name='napalm-gaia',
-    version='0.0.7',
+    version='0.0.8',
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages('napalm_gaiaos'),
     package_dir={'': 'napalm_gaiaos'},
     url='https://github.com/remingu/napalm-gaia',
     license='Apache 2.0',
-    author='Daniel Schlifka(remingu), mbtathcx',
-    author_email='remingu@techturn.de',
+    author='Daniel Schlifka(remingu), Pavel Smejkal(mbtathcx>',
+    author_email='Daniel Schlifka <remingu@techturn.de>, Pavel Smejkal <sm3jkal@centrum.cz',
     description='napalm driver plugin for checkpoint gaia-os',
     install_requires=reqs,
     keywords='development napalm checkpoint gaia ',

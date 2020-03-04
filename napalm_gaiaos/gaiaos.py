@@ -83,12 +83,19 @@ class GaiaOSDriver(NetworkDriver):
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
     
-    def get_users(self) -> dict:
+    def get_users(self, **kwargs) -> dict:
         """
             | Returns a dictionary with the configured users.
             | The keys of the main dictionary represents the username.
+            | Checkpoint uses RBAC and does not know about privilege levels
+            | therefore level always returns a level of 15
+            | instead a field 'privileges' was added containing additional user-role information
+            |
+            | ssh-keys will only fetched with option retrieve='all' (requires expert password)
+            | otherwise ssh-keys will return a list containing an empty string
             | The values represent the details of the user,
             | represented by the following keys:
+
 
                 * uid: int
                 * gid: int
@@ -96,6 +103,8 @@ class GaiaOSDriver(NetworkDriver):
                 * shell: str
                 * name: str
                 * privileges: str
+                * sshkeys: list[str,]
+                * level : 15,
 
             :return: dict
 
@@ -109,22 +118,30 @@ class GaiaOSDriver(NetworkDriver):
                         'shell': '/etc/cli.sh',
                         'name': 'n/a',
                         'privileges': 'Access to Expert features'},
+                        'level' : 15,
+                        'password' : '$1$aWTXGUmr$1r1Ls428oJg2gFwMcKJdO0'
+                        'sshkeys' : ['',]}
                     'monitor':                        {
                         'uid': '102',
                         'gid': '100',
                         'homedir': '/home/monitor',
                         'shell': '/etc/cli.sh',
                         'name': 'Monitor',
-                        'privileges': 'None'}
+                        'privileges': 'None',
+                        'level' : 15,
+                        'password' : '*'
+                        'sshkeys' : ['',]}
                 }
 
 
         """
-
         username_regex = (
             r'^([A-z0-9_-]{1,32})\s+(\d+)\s+(\d+)\s+([/A-z0-9_-]{1,})\s+'
             r'([./A-z0-9_-]{1,})\s+((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-])\s+'
             r'((?:[\/A-z0-9_-]+\s?)+[\/A-z0-9_-]).+?$'
+        )
+        pwdhash_regex = (
+            r'^[a-z]{3}\s[a-z]{4}\s([A-z][A-z0-9_-]+)\s.*hash\s(.*)$'
         )
         users = {}
         command = 'show users'
@@ -139,6 +156,32 @@ class GaiaOSDriver(NetworkDriver):
                     'name': match.group(6),
                     'privileges': match.group(7),
                 }
+            command = 'show configuration user'
+            output = self.device.send_command(command)
+            for match in re.finditer(pwdhash_regex, output, re.M):
+                users[match.group(1)]['password'] = match.group(2)
+            if 'retrieve' in kwargs:
+                if kwargs['retrieve'] == 'all':
+                    if self._enter_expert_mode() is True:
+                        files = ['authorized_keys', 'authorized_keys2']
+                        for user in users:
+                            users[user]['sshkeys'] = []
+                            i = False
+                            for file in files:
+                                command = r'cat /home/{0}/.ssh/{1}'.format(user, file)
+                                output = self.device.send_command(command)
+                                if re.match(r'cat.*$', output) is None and re.match(r'$', output) is None:
+                                    users[user]['sshkeys'].append(str(output.split('\n')))
+                                    i = True
+                                else:
+                                    pass
+                            if i is False:
+                                users[user]['sshkeys'].append('')
+                    else:
+                        raise RuntimeError('unable to enter expert-mode')
+            else:
+                for user in users:
+                    users[user]['sshkeys'] = ['']
             return users
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
@@ -731,10 +774,10 @@ class GaiaOSDriver(NetworkDriver):
             vsx_regex = 'VSX is not supported'
             command = 'vsx get' 
         else:
-            vsx_regex = '[Dd]isabled'
+            vsx_regex = 'Disabled'
             command = 'show vsx'
         output = self.device.send_command(command)
-        if not vsx_regex in output:
+        if not re.search(vsx_regex, output, re.I):
             return True
         else:
             return False
