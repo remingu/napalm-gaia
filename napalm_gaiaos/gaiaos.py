@@ -715,7 +715,83 @@ class GaiaOSDriver(NetworkDriver):
                 return response
         else:
             raise ValueError('invalid host format')
-    
+
+    def get_facts(self, **kwargs):
+        """
+
+
+
+            Returns a dictionary containing the following information:
+             * uptime - Uptime of the device in seconds.
+             * vendor - Manufacturer of the device.
+             * model - Device model.
+             * hostname - Hostname of the device
+             * fqdn - Fqdn of the device
+             * os_version - String with the OS version running on the device.
+             * serial_number - Serial number of the device
+             * interface_list - List of the interfaces of the device
+            Example::
+                {
+                'uptime': 151005.57332897186,
+                'vendor': u'Arista',
+                'os_version': u'4.14.3-2329074.gaatlantarel',
+                'serial_number': u'SN0123A34AS',
+                'model': u'vEOS',
+                'hostname': u'eos-router',
+                'fqdn': u'eos-router',
+                'interface_list': [u'Ethernet2', u'Management1', u'Ethernet1', u'Ethernet3']
+                }
+
+
+        :param kwargs:
+        :return:
+        """
+        retdict = {}
+        interfaces = self.device.send_command_timing('show interfaces\t', max_loops=2)
+
+        # uptime requires conversion to seconds -> output format follows pattern:
+        #   " 1 year 1 month 1 day 1 hour 5 minutes"
+        # unused fields will be omitted
+        #   (i.e. " 1 day 1 hour 5 minutes")
+        # need to doublecheck with realworld deployments(to less uptime in lab)
+        # disable meanwhile and set to zero
+        uptime = float(0)
+        hostname = self.device.send_command('show hostname')
+        dns_suffix = self.device.send_command('show dns suffix')
+        if re.match('$', dns_suffix) is None:
+            fqdn = hostname + '.' + dns_suffix
+        else:
+            fqdn = hostname
+        output = self.device.send_command('show version product')
+        output = re.match('.*(Check Point Gaia R\d+\.\d+)\s*$', output)
+        if output is not None:
+            os_version = output.group(1)
+            output = self.device.send_command('show version os kernel')
+            output = re.match('OS\skernel\sversion\s(.*)$', output)
+            if output is not None:
+                os_version += ' - Kernel: ' + output.group(1)
+        else:
+            os_version = 'unknown'
+        # sn - behaviour differs  openserver/virtual appliance require ('expert::dmidecode -t system')
+        # appliances work with('clish::cpstat -os'). platform check required (use uuid if sn is 'none'?)
+        # set sn to empty string meanwhile
+        #
+        output = self.device.send_command('cpstat os')
+        retdict['model'] = 'unknown'
+        for line in str(output).split('\n'):
+            if re.match(r'Appliance\sName.*$', line) is not None:
+                retdict['model'] = re.match(r'Appliance\sName:\s*(.*)$', line).group(1)
+        sn = ''
+        vendor = ''
+        retdict['uptime'] = uptime
+        retdict['os_version'] = os_version
+        retdict['serial_number'] = sn
+        retdict['vendor'] = vendor
+        retdict['hostname'] = hostname
+        retdict['fqdn'] = fqdn
+        retdict['interface_list'] = interfaces
+        return retdict
+
     def _is_valid_hostname(self, hostname) -> bool:
         if ipaddress.ip_address(hostname):
             return True
@@ -853,14 +929,7 @@ class GaiaOSDriver(NetworkDriver):
         """
         raise NotImplementedError
 
-    def get_facts(self):
-        """
-            not implemented yet
 
-        :param kwargs:
-        :return:
-        """
-        raise NotImplementedError
 
     def get_firewall_policies(self):
         """
