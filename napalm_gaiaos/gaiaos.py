@@ -766,6 +766,10 @@ class GaiaOSDriver(NetworkDriver):
         output = re.match('.*(Check Point Gaia R\d+\.\d+)\s*$', output)
         if output is not None:
             os_version = output.group(1)
+            output = self.device.send_command('show version os kernel')
+            output = re.match('OS\skernel\sversion\s(.*)$', output)
+            if output is not None:
+                os_version += ' - Kernel: ' + output.group(1)
         else:
             os_version = 'unknown'
         # sn - behaviour differs  openserver/virtual appliance require ('expert::dmidecode -t system')
