@@ -716,14 +716,59 @@ class GaiaOSDriver(NetworkDriver):
         else:
             raise ValueError('invalid host format')
 
-    def get_facts(self):
+    def get_facts(self, **kwargs):
         """
-            not implemented yet
+
+
+
+            Returns a dictionary containing the following information:
+             * uptime - Uptime of the device in seconds.
+             * vendor - Manufacturer of the device.
+             * model - Device model.
+             * hostname - Hostname of the device
+             * fqdn - Fqdn of the device
+             * os_version - String with the OS version running on the device.
+             * serial_number - Serial number of the device
+             * interface_list - List of the interfaces of the device
+            Example::
+                {
+                'uptime': 151005.57332897186,
+                'vendor': u'Arista',
+                'os_version': u'4.14.3-2329074.gaatlantarel',
+                'serial_number': u'SN0123A34AS',
+                'model': u'vEOS',
+                'hostname': u'eos-router',
+                'fqdn': u'eos-router',
+                'interface_list': [u'Ethernet2', u'Management1', u'Ethernet1', u'Ethernet3']
+                }
+
 
         :param kwargs:
         :return:
         """
-        raise NotImplementedError
+        retdict = {}
+        interfaces = self.device.send_command_timing('show interfaces\t', max_loops=2)
+
+        # uptime requires conversion to seconds -> output format follows pattern:
+        #   " 1 year 1 month 1 day 1 hour 5 minutes"
+        # unused fields will be omitted
+        #   (i.e. " 1 day 1 hour 5 minutes")
+        # need to doublecheck with realworld deployments(to less uptime in lab)
+        # disable meanwhile and set to zero
+        uptime = float(0)
+        hostname = self.device.send_command('show hostname')
+        dns_suffix = self.device.send_command('show dns suffix')
+        if re.match('$', dns_suffix) is None:
+            fqdn = hostname + '.' + dns_suffix
+        else:
+            fqdn = hostname
+        os_version = self.device.send_command('show version product')
+        # sn - behaviour differs  openserver/virtual appliance require ('expert::dmidecode -t system')
+        # appliances work with('clish::cpstat -os'). platform check required
+        # set sn to empty string meanwhile
+        #
+        sn = ''
+        return NotImplementedError
 
     def _is_valid_hostname(self, hostname) -> bool:
         if ipaddress.ip_address(hostname):
