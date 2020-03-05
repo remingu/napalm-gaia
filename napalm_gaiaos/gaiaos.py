@@ -762,13 +762,31 @@ class GaiaOSDriver(NetworkDriver):
             fqdn = hostname + '.' + dns_suffix
         else:
             fqdn = hostname
-        os_version = self.device.send_command('show version product')
+        output = self.device.send_command('show version product')
+        output = re.match('.*(Check Point Gaia R\d+\.\d+)\s*$', output)
+        if output is not None:
+            os_version = output.group(1)
+        else:
+            os_version = 'unknown'
         # sn - behaviour differs  openserver/virtual appliance require ('expert::dmidecode -t system')
-        # appliances work with('clish::cpstat -os'). platform check required
+        # appliances work with('clish::cpstat -os'). platform check required (use uuid if sn is 'none'?)
         # set sn to empty string meanwhile
         #
+        output = self.device.send_command('cpstat os')
+        retdict['model'] = 'unknown'
+        for line in str(output).split('\n'):
+            if re.match(r'Appliance\sName.*$', line) is not None:
+                retdict['model'] = re.match(r'Appliance\sName:\s*(.*)$', line).group(1)
         sn = ''
-        return NotImplementedError
+        vendor = ''
+        retdict['uptime'] = uptime
+        retdict['os_version'] = os_version
+        retdict['serial_number'] = sn
+        retdict['vendor'] = vendor
+        retdict['hostname'] = hostname
+        retdict['fqdn'] = fqdn
+        retdict['interface_list'] = interfaces
+        return retdict
 
     def _is_valid_hostname(self, hostname) -> bool:
         if ipaddress.ip_address(hostname):
