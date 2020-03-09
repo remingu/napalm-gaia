@@ -357,9 +357,9 @@ class GaiaOSDriver(NetworkDriver):
             RuntimeError(e)
         return retdict
 
-    def get_firewall_policy(self, **kwargs) -> dict:
+    def get_firewall_policy(self, interfaces=False) -> dict:
         """
-            | Gets firewall policy statistics. Returns a dict with the following keys.
+            | Gets firewall policy information. Returns a dict with the following keys.
             |    * name (str)
             |    * install_time (str)
             |    * current_conns (int)
@@ -377,7 +377,7 @@ class GaiaOSDriver(NetworkDriver):
             |               * deny (int)
             |               * log (int)
 
-        :param: interfaces: bool
+        :param interfaces: bool
         :return: dict
 
         example::
@@ -436,27 +436,26 @@ class GaiaOSDriver(NetworkDriver):
                 'peak_conns': int(policy_list[4]),
                 'conns_limit': int(policy_list[5])
             }
-            if 'interfaces' in kwargs:
-                if kwargs['interfaces'] is True:
-                    policy['iftab32'] = {}
-                    policy['iftab64'] = {}
-                    for match in re.finditer(policy_if_regex, output, re.M):
-                        counters = {
-                            'total': int(match.group(3)),
-                            'accept': int(match.group(4)),
-                            'deny': int(match.group(5)),
-                            'log': int(match.group(6))
-                        }
-                        if match.group(1) not in policy['iftab32']:
-                            policy['iftab32'][match.group(1)] = {}
-                        elif match.group(1) not in policy['if_tab_64']:
-                            policy['if_tab_64'][match.group(1)] = {}
-                        else:
-                            pass
-                        if match.group(2) not in policy['iftab32'][match.group(1)]:
-                            policy['iftab32'][match.group(1)][match.group(2)] = counters
-                        else:
-                            policy['iftab64'][match.group(1)][match.group(2)] = counters
+            if interfaces is True:
+                policy['iftab32'] = {}
+                policy['iftab64'] = {}
+                for match in re.finditer(policy_if_regex, output, re.M):
+                    counters = {
+                        'total': int(match.group(3)),
+                        'accept': int(match.group(4)),
+                        'deny': int(match.group(5)),
+                        'log': int(match.group(6))
+                    }
+                    if match.group(1) not in policy['iftab32']:
+                        policy['iftab32'][match.group(1)] = {}
+                    elif match.group(1) not in policy['if_tab_64']:
+                        policy['if_tab_64'][match.group(1)] = {}
+                    else:
+                        pass
+                    if match.group(2) not in policy['iftab32'][match.group(1)]:
+                        policy['iftab32'][match.group(1)][match.group(2)] = counters
+                    else:
+                        policy['iftab64'][match.group(1)][match.group(2)] = counters
             return policy
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
