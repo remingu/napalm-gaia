@@ -248,8 +248,8 @@ class GaiaOSDriver(NetworkDriver):
       
     def get_config(self, retrieve='all') -> dict:
         """
-        Get host configuration. Returns a string delimited with a '\n' for further parsing.
-        Configuration can be retrieved at once or as logical part.
+        | Get host configuration. Returns a string delimited with a '\n' for further parsing.
+        | Configuration can be retrieved at once or as logical part.
 
         :return: dict
 
@@ -356,8 +356,114 @@ class GaiaOSDriver(NetworkDriver):
         except Exception as e:
             RuntimeError(e)
         return retdict
-    
+
+    def get_firewall_policy(self, interfaces=False) -> dict:
+        """
+            | Gets firewall policy information. Returns a dict with the following keys.
+            |    * name (str)
+            |    * install_time (str)
+            |    * current_conns (int)
+            |    * peak_conns (int)
+            |    * conns_limit (int)
+
+            | With optional parameter 'interfaces' returns nested dict with the following keys.
+            |    * iftab32 (dict)
+            |    * iftab64 (dict)
+            |       *  <interface name> (dict)
+            |           * in (dict)
+            |           * out (dict)
+            |               * total (int)
+            |               * accept (int)
+            |               * deny (int)
+            |               * log (int)
+
+        :param interfaces: bool
+        :return: dict
+
+        example::
+            {
+              'name': 'policy',
+              'install_time': 'Wed Mar  1 00:00:00 2020',
+              'current_conns': '0',
+              'peak_conns': '0',
+              'conns_limit': '0',
+              'if_tab_32': {
+                'bond0': {
+                  'in': {
+                    'total': '0',
+                    'accept': '0',
+                    'deny': '0',
+                    'log': '0'
+                  },
+                  'out': {
+                    'total': '0',
+                    'accept': '0',
+                    'deny': '0',
+                    'log': '0'
+                  }
+                }
+                'if_tab_64': {
+                  'bond0': {
+                    'in': {
+                      'total': '0',
+                      'accept': '0',
+                      'deny': '0',
+                      'log': '0'
+                    },
+                    'out': {
+                      'total': '0',
+                      'accept': '0',
+                      'deny': '0',
+                      'log': '0'
+                    }
+                  }
+                }
+        """
+        try:
+            policy_regex = r'([A-z. ]+)(?:\:)(?:\s+)([A-z0-9-_:\ ]+)'
+            policy_if_regex = r'^(?:\|)([A-z0-9.]+)(?:\s+\||\|)([A-z]+)' \
+                              r'(?:\s+\||\|)(?:\s+|)(\d+)(?:\s+\||\|\s+|\|)' \
+                              r'(\d+)(?:\s+\||\|\s+|\|)(\d+)(?:\s+\||\|\s+|\|)(\d+)'
+            command = 'cpstat -f policy fw'
+            output = self.device.send_command(command)
+            policy_list = []
+            for match in re.finditer(policy_regex, output, re.M):
+                policy_list.append(match.group(2))
+            policy = {
+                'name': str(policy_list[1]),
+                'install_time': str(policy_list[2]),
+                'current_conns': int(policy_list[3]),
+                'peak_conns': int(policy_list[4]),
+                'conns_limit': int(policy_list[5])
+            }
+            if interfaces is True:
+                policy['iftab32'] = {}
+                policy['iftab64'] = {}
+                for match in re.finditer(policy_if_regex, output, re.M):
+                    counters = {
+                        'total': int(match.group(3)),
+                        'accept': int(match.group(4)),
+                        'deny': int(match.group(5)),
+                        'log': int(match.group(6))
+                    }
+                    if match.group(1) not in policy['iftab32']:
+                        policy['iftab32'][match.group(1)] = {}
+                    elif match.group(1) not in policy['if_tab_64']:
+                        policy['if_tab_64'][match.group(1)] = {}
+                    else:
+                        pass
+                    if match.group(2) not in policy['iftab32'][match.group(1)]:
+                        policy['iftab32'][match.group(1)][match.group(2)] = counters
+                    else:
+                        policy['iftab64'][match.group(1)][match.group(2)] = counters
+            return policy
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise RuntimeError(str(e))
+
     def get_interfaces(self) -> dict:
+
         """
             | Get interface details.
             | last_flapped is not implemented and will return -1.
@@ -480,37 +586,43 @@ class GaiaOSDriver(NetworkDriver):
     def get_virtual_systems(self) -> dict:
         """
             | Get virtual systems information.   
-            | Returns dictionary with VS ID as a key and VS NAME as a value.
+            | Returns a dictionary with configured virtual systems.
+            | The keys of the main dictionary represents virtual system ID.
+            | The values represent the detail of the  virtual system,
+            | represeted by the following keys.
+            |   * type (str)
+            |   * name (str)
+            |   * policy (str)
+            |   * sic (str)
             
             :return: dict
             
             example::
                 {
-                  |  0:'0',
-                  |  6:'dummy-vsx-instance',
+                  0:
+                    {'
+                      'type': 'VSX Gateway',
+                      'name': 'dummy_vsx_gw',
+                      'policy': 'dummy_policy'
+                      'sic': 'Trust established'
+                    }
                 }
         """
         try:
             if self._check_vsx_state() is True:
-                if self._check_expert_mode():
-                    vs_regex = r'VSID:\s+\d+|Name:\s+.*'
-                    command = 'vsx stat -l'
-                    output = self.device.send_command(command)
-                    match = re.findall(vs_regex, output, re.M)
-                    vals = [val.split(':')[1].strip() for val in match]
-                    items = list(map(list, zip(vals[::2], vals[1::2])))
-                    vs_id = {item[0]: item[1] for item in items}
-                else:
-                    vs_id = {}
-                    vs_regex = r'(?:(\d+)\s+([A-z0-9_-]+)+)'
-                    command = 'show virtual-system all'
-                    output = self.device.send_command(command)
-                    for match in re.finditer(vs_regex, output, re.M):
-                        vs_id[match.group(1)] = match.group(2)
-                if "0" in vs_id.keys():
-                    return vs_id
-                else:
-                    raise CommandErrorException('cannot get VS list')
+                vs_regex = r'\|(.\d+)\|([A-z0-9-_]+\s.\w+)+(?:\s+\||\|)+([A-z0-9-_]+)+' \
+                           r'(?:\s+\||\|)+([A-z0-9_-]+)+(?:\s+\||\|)+(.*)(?:\|)'
+                command = 'cpstat -f stat vsx'
+                output = self.device.send_command(command)
+                vs = {}
+                for match in re.finditer(vs_regex, output, re.M):
+                    vs[match.group(1)] = {
+                        'type': match.group(2),
+                        'name': match.group(3),
+                        'policy': match.group(4),
+                        'sic': match.group(5)
+                    }
+                return vs
             else:
                 raise ValidationException('VSX not enabled')
         except (socket.error, EOFError) as e:
@@ -850,15 +962,11 @@ class GaiaOSDriver(NetworkDriver):
         """
             :return: bool
         """
-        if self._check_expert_mode():
-            vsx_regex = 'VSX is not supported'
-            command = 'vsx get' 
-        else:
-            vsx_regex = 'Disabled'
-            command = 'show vsx'
+        vsx_regex = r'^\|.\d+\|'
+        command = 'cpstat -f stat vsx'
         try:
             output = self.device.send_command(command)
-            if not re.search(vsx_regex, output, re.I):
+            if re.search(vsx_regex, output, re.M):
                 return True
             else:
                 return False
@@ -930,15 +1038,6 @@ class GaiaOSDriver(NetworkDriver):
         raise NotImplementedError
 
 
-
-    def get_firewall_policies(self):
-        """
-            not implemented yet
-
-        :param kwargs:
-        :return:
-        """
-        raise NotImplementedError
 
     def get_interfaces_counters(self):
         """
