@@ -379,6 +379,45 @@ class GaiaOSDriver(NetworkDriver):
 
         :param: interfaces: bool
         :return: dict
+
+        example::
+            {
+              'name': 'policy',
+              'install_time': 'Wed Mar  1 00:00:00 2020',
+              'current_conns': '0',
+              'peak_conns': '0',
+              'conns_limit': '0',
+              'if_tab_32': {
+                'bond0': {
+                  'in': {
+                    'total': '0',
+                    'accept': '0',
+                    'deny': '0',
+                    'log': '0'
+                  },
+                  'out': {
+                    'total': '0',
+                    'accept': '0',
+                    'deny': '0',
+                    'log': '0'
+                  }
+                }
+                'if_tab_64': {
+                  'bond0': {
+                    'in': {
+                      'total': '0',
+                      'accept': '0',
+                      'deny': '0',
+                      'log': '0'
+                    },
+                    'out': {
+                      'total': '0',
+                      'accept': '0',
+                      'deny': '0',
+                      'log': '0'
+                    }
+                  }
+                }
         """
         try:
             policy_regex = r'([A-z. ]+)(?:\:)(?:\s+)([A-z0-9-_:\ ]+)'
@@ -410,9 +449,10 @@ class GaiaOSDriver(NetworkDriver):
                         }
                         if match.group(1) not in policy['iftab32']:
                             policy['iftab32'][match.group(1)] = {}
+                        elif match.group(1) not in policy['if_tab_64']:
+                            policy['if_tab_64'][match.group(1)] = {}
                         else:
-                            if match.group(1) not in policy['iftab64']:
-                                policy['iftab64'][match.group(1)] = {}
+                            pass
                         if match.group(2) not in policy['iftab32'][match.group(1)]:
                             policy['iftab32'][match.group(1)][match.group(2)] = counters
                         else:
