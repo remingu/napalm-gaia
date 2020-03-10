@@ -450,7 +450,39 @@ class GaiaOSDriver(NetworkDriver):
                     u'Vlan200': {   'ipv4': {   u'10.63.176.57': {   'prefix_length': 29}}}}
 
         """
-
+        RE_INTDATA = r'\s+(.*)\n(.*\n){12}\s+\w+-\w+\s(.*)\n\s+\w+-\w+\s(.*)\n.*'
+        # capture-groups :
+        # 0 nic
+        # 2 ipv4
+        # 3 ipv6
+        interface_table = {}
+        try:
+            self.device.send_command('set clienv rows 0')
+            output = self.device.send_command('show interfaces all')
+            output = str(output).split('Interface')
+            for item in output:
+                if len(item) == 0:
+                    output.remove(item)
+            for i in range(len(output)):
+                intdata = re.findall(RE_INTDATA, output[i])
+                interface_table[intdata[0][0]] = {}
+                if intdata[0][2] != 'Not Configured':
+                    interface_table[intdata[0][0]]['ipv4'] = {}
+                    ip_addr = str(intdata[0][2]).split('/')
+                    if len(ip_addr) > 1:
+                        interface_table[intdata[0][0]]['ipv4'][ip_addr[0]] = {'prefix_length': int(ip_addr[1])}
+                    else:
+                        raise ValueError('unknown ip-address format')
+                if intdata[0][3] != 'Not Configured':
+                    interface_table[intdata[0][0]]['ipv6'] = {}
+                    ip_addr = str(intdata[0][3]).split('/')
+                    if len(ip_addr) > 1:
+                        interface_table[intdata[0][0]]['ipv6'][ip_addr[0]] = {'prefix_length': int(ip_addr[1])}
+                    else:
+                        raise ValueError('unknown ip-address format')
+        except Exception as e:
+            raise RuntimeError(e)
+        return interface_table
 
     
     def get_virtual_systems(self) -> dict:
