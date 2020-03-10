@@ -388,13 +388,45 @@ class GaiaOSDriver(NetworkDriver):
                               'mac_address': u'a493.4cc1.67a7',
                               'speed': 100,
                               'mtu': 1500   }}
-
         """
-        RE_INTDATA = r'[a-z]+\s(.*)\n[a-z]+-[a-z]+\s(.*)\n[a-z]+\s(.*)'
-
+        RE_INTDATA = r'\s+(.*)\n\s+\w+\s+(.*)\n\s+\w+-\w+\s(.*)\n.*\n' \
+                     r'\s+\w+-\w+\s\w+\s+(.*)\n\s+\w+\s+(.*)(\n.*)\n\s+\w+\s([0-9]+|N/A).*\n(.*\n){4}\s+\w+(.*)\n.*'
+        # capture-groups :
+        # 0 nic
+        # 1 is_enabled
+        # 2 mac
+        # 3 is up
+        # 4 mtu
+        # 6 speed
+        # 8 descr
         interface_table = {}
         try:
-            self.device.send_command('set cli')
+            self.device.send_command('set clienv rows 0')
+            output = self.device.send_command('show interfaces all')
+            output = str(output).split('Interface')
+            for item in output:
+                if len(item) == 0:
+                    output.remove(item)
+            for i in range(len(output)):
+                intdata = re.findall(RE_INTDATA, output[i])
+                interface_table[intdata[0][0]] = {}
+                interface_table[intdata[0][0]]['last_flapped'] = -1.0
+                interface_table[intdata[0][0]]['mac_address'] = intdata[0][2]
+                interface_table[intdata[0][0]]['mtu'] = intdata[0][4]
+                interface_table[intdata[0][0]]['description'] = intdata[0][8]
+                if str.isnumeric(intdata[0][6]):
+                    interface_table[intdata[0][0]]['speed'] = intdata[0][6]
+                else:
+                    interface_table[intdata[0][0]]['speed'] = 0
+                if intdata[0][1] == 'off':
+                    interface_table[intdata[0][0]]['is_enabled'] = False
+                else:
+                    interface_table[intdata[0][0]]['is_enabled'] = True
+                if intdata[0][3] == 'down':
+                    interface_table[intdata[0][0]]['is_up'] = False
+                else:
+                    interface_table[intdata[0][0]]['is_up'] = True
+
 
         except Exception as e:
             raise RuntimeError(e)
