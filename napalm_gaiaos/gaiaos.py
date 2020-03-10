@@ -365,16 +365,20 @@ class GaiaOSDriver(NetworkDriver):
             |    * current_conns (int)
             |    * peak_conns (int)
             |    * conns_limit (int)
-
+            |
             | With optional parameter 'interfaces' returns nested dict with the following keys.
             |    * iftab32 (dict)
             |    * iftab64 (dict)
-            |       *  <interface name> (dict)
+            |       * <interface name> (dict)
             |           * in (dict)
-            |           * out (dict)
-            |               * total (int)
             |               * accept (int)
-            |               * deny (int)
+            |               * drop (int)
+            |               * reject (int)
+            |               * log (int)
+            |           * out (dict)
+            |               * accept (int)
+            |               * drop (int)
+            |               * reject (int)
             |               * log (int)
 
         :param interfaces: bool
@@ -390,30 +394,30 @@ class GaiaOSDriver(NetworkDriver):
               'if_tab_32': {
                 'bond0': {
                   'in': {
-                    'total': '0',
                     'accept': '0',
-                    'deny': '0',
+                    'drop': '0',
+                    'reject': '0',
                     'log': '0'
                   },
                   'out': {
-                    'total': '0',
                     'accept': '0',
-                    'deny': '0',
+                    'drop': '0',
+                    'reject': '0',
                     'log': '0'
                   }
                 }
                 'if_tab_64': {
                   'bond0': {
                     'in': {
-                      'total': '0',
                       'accept': '0',
-                      'deny': '0',
+                      'drop': '0',
+                      'reject': '0',
                       'log': '0'
                     },
                     'out': {
-                      'total': '0',
                       'accept': '0',
-                      'deny': '0',
+                      'drop': '0',
+                      'reject': '0',
                       'log': '0'
                     }
                   }
@@ -437,25 +441,20 @@ class GaiaOSDriver(NetworkDriver):
                 'conns_limit': int(policy_list[5])
             }
             if interfaces is True:
-                policy['iftab32'] = {}
-                policy['iftab64'] = {}
                 for match in re.finditer(policy_if_regex, output, re.M):
                     counters = {
-                        'total': int(match.group(3)),
                         'accept': int(match.group(4)),
-                        'deny': int(match.group(5)),
-                        'log': int(match.group(6))
+                        'drop': int(match.group(5)),
+                        'reject': int(match.group(6)),
+                        'log': int(match.group(7))
                     }
-                    if match.group(1) not in policy['iftab32']:
-                        policy['iftab32'][match.group(1)] = {}
-                    elif match.group(1) not in policy['if_tab_64']:
-                        policy['if_tab_64'][match.group(1)] = {}
+                    if match.group(1) is None:
+                        if match.group(2) not in policy[iftab]:
+                            policy[iftab][match.group(2)] = {}
+                        policy[iftab][match.group(2)][match.group(3)] = counters
                     else:
-                        pass
-                    if match.group(2) not in policy['iftab32'][match.group(1)]:
-                        policy['iftab32'][match.group(1)][match.group(2)] = counters
-                    else:
-                        policy['iftab64'][match.group(1)][match.group(2)] = counters
+                        iftab = 'iftab64' if re.sub(r'\D', '', match.group(1)) == '64' else 'iftab32'
+                        policy[iftab] = {}
             return policy
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
