@@ -15,7 +15,7 @@ with open(path.join(lpath, 'requirements.txt'), "r") as fh:
 
 setup(
     name='napalm-gaia',
-    version='0.0.9',
+    version='0.0.10',
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),

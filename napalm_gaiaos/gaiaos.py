@@ -388,49 +388,45 @@ class GaiaOSDriver(NetworkDriver):
                               'mac_address': u'a493.4cc1.67a7',
                               'speed': 100,
                               'mtu': 1500   }}
-
         """
-
-        command_options = {'state': 'is_enabled',
-                           'comments': 'description',
-                           'speed': 'speed',
-                           'link-state': 'is_up',
-                           'mac-addr': 'mac_address',
-                           'mtu': 'mtu'}
+        RE_INTDATA = r'\s+(.*)\n\s+\w+\s+(.*)\n\s+\w+-\w+\s(.*)\n.*\n' \
+                     r'\s+\w+-\w+\s\w+\s+(.*)\n\s+\w+\s+(.*)(\n.*)\n\s+\w+\s([0-9]+|N/A).*\n(.*\n){4}\s+\w+(.*)\n.*'
+        # capture-groups :
+        # 0 nic
+        # 1 is_enabled
+        # 2 mac
+        # 3 is up
+        # 4 mtu
+        # 6 speed
+        # 8 descr
         interface_table = {}
         try:
-            output = self.device.send_command_timing('show interfaces\t', max_loops=2)
-            interface_list = output.split()
-            for interface in interface_list:
-                interface_table[interface] = {}
-                interface_table[interface]['last_flapped'] = -1.0
-                for cmd in command_options:
-                    output = self.device.send_command(r'show interface {0} {1}'.format(interface, cmd)).split()
-                    if len(output) == 1:
-                        interface_table[interface][command_options[cmd]] = u''
-                    else:
-                        if cmd == 'speed':
-                            if re.search(r'(\d+)(\D)', output[1]):
-                                tmpstr = re.match(r'(\d+)(\D)', output[1])
-                                interface_table[interface][command_options[cmd]] = tmpstr.group(1)
-                            else:
-                                interface_table[interface][command_options[cmd]] = 0
-                        elif cmd == 'link-state' or cmd == 'state':
-                            if output[1] == 'on':
-                                interface_table[interface][command_options[cmd]] = True
-                            elif output[1] == 'off':
-                                interface_table[interface][command_options[cmd]] = False
-                            else:
-                                interface_table[interface][command_options[cmd]] = True
-                        elif cmd == 'mac-addr':
-                            if re.search(r'[0-9a-f:]+', output[1]) :
-                                interface_table[interface][command_options[cmd]] = output[1]
-                            else:
-                                interface_table[interface][command_options[cmd]] = u'not configured'
-                        elif cmd == 'comments':
-                            interface_table[interface][command_options[cmd]] = output[1]
-                        elif cmd == 'mtu':
-                            interface_table[interface][command_options[cmd]] = output[1]
+            self.device.send_command('set clienv rows 0')
+            output = self.device.send_command('show interfaces all')
+            output = str(output).split('Interface')
+            for item in output:
+                if len(item) == 0:
+                    output.remove(item)
+            for i in range(len(output)):
+                intdata = re.findall(RE_INTDATA, output[i])
+                interface_table[intdata[0][0]] = {}
+                interface_table[intdata[0][0]]['last_flapped'] = -1.0
+                interface_table[intdata[0][0]]['mac_address'] = intdata[0][2]
+                interface_table[intdata[0][0]]['mtu'] = intdata[0][4]
+                interface_table[intdata[0][0]]['description'] = intdata[0][8]
+                if str.isnumeric(intdata[0][6]):
+                    interface_table[intdata[0][0]]['speed'] = intdata[0][6]
+                else:
+                    interface_table[intdata[0][0]]['speed'] = 0
+                if intdata[0][1] == 'off':
+                    interface_table[intdata[0][0]]['is_enabled'] = False
+                else:
+                    interface_table[intdata[0][0]]['is_enabled'] = True
+                if intdata[0][3] == 'down':
+                    interface_table[intdata[0][0]]['is_up'] = False
+                else:
+                    interface_table[intdata[0][0]]['is_up'] = True
+
 
         except Exception as e:
             raise RuntimeError(e)
@@ -454,28 +450,40 @@ class GaiaOSDriver(NetworkDriver):
                     u'Vlan200': {   'ipv4': {   u'10.63.176.57': {   'prefix_length': 29}}}}
 
         """
-
-        command_options = {'ipv4-address': 'ipv4', 'ipv6-address': 'ipv6'}
+        RE_INTDATA = r'\s+(.*)\n(.*\n){12}\s+\w+-\w+\s(.*)\n\s+\w+-\w+\s(.*)\n.*'
+        # capture-groups :
+        # 0 nic
+        # 2 ipv4
+        # 3 ipv6
         interface_table = {}
         try:
-            output = self.device.send_command_timing('show interfaces\t')
-            interface_list = str(output).split()
-            for interface in interface_list:
-                interface_table[interface] = {}
-                for option in command_options:
-                    output = self.device.send_command(r'show interface {0} {1}'.format(interface, option))
-                    tmpstr = re.match('{0}\s(.*)/(.*)'.format(option), output)
-                    if tmpstr is not None:
-                        if ipaddress.ip_address(tmpstr.group(1)):
-                            addr = str(tmpstr.group(1))
-
-                            prefix = int(tmpstr.group(2))
-                            interface_table[interface][command_options[option]] = {}
-                            interface_table[interface][command_options[option]][addr] = {'prefix_length': prefix}
-
+            self.device.send_command('set clienv rows 0')
+            output = self.device.send_command('show interfaces all')
+            output = str(output).split('Interface')
+            for item in output:
+                if len(item) == 0:
+                    output.remove(item)
+            for i in range(len(output)):
+                intdata = re.findall(RE_INTDATA, output[i])
+                interface_table[intdata[0][0]] = {}
+                if intdata[0][2] != 'Not Configured':
+                    interface_table[intdata[0][0]]['ipv4'] = {}
+                    ip_addr = str(intdata[0][2]).split('/')
+                    if len(ip_addr) > 1:
+                        interface_table[intdata[0][0]]['ipv4'][ip_addr[0]] = {'prefix_length': int(ip_addr[1])}
+                    else:
+                        raise ValueError('unknown ip-address format')
+                if intdata[0][3] != 'Not Configured':
+                    interface_table[intdata[0][0]]['ipv6'] = {}
+                    ip_addr = str(intdata[0][3]).split('/')
+                    if len(ip_addr) > 1:
+                        interface_table[intdata[0][0]]['ipv6'][ip_addr[0]] = {'prefix_length': int(ip_addr[1])}
+                    else:
+                        raise ValueError('unknown ip-address format')
         except Exception as e:
-            raise Exception(e)
+            raise RuntimeError(e)
         return interface_table
+
     
     def get_virtual_systems(self) -> dict:
         """
