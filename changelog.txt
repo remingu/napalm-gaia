@@ -1,6 +1,8 @@
 0.0.11
 -changed exit behavior of get_users() to have consistent behavior
 -added changelog
+-updated docstrings
+-added get_facts()
 0.0.10
 -corrected get_interfaces && get_interfaces_ip
 0.0.9
