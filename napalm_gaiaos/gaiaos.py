@@ -493,8 +493,8 @@ class GaiaOSDriver(NetworkDriver):
             
             example::
                 {
-                  |  0:'0',
-                  |  6:'dummy-vsx-instance',
+                  |  '0':'0',
+                  |  '6':'dummy-vsx-instance',
                 }
         """
         if self._check_vsx_state() is False:
@@ -658,7 +658,6 @@ class GaiaOSDriver(NetworkDriver):
                 }
 
         """
-
         try:
             self.device.send_command('\t')
         except (socket.error, EOFError) as e:
