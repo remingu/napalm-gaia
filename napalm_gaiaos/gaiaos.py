@@ -391,14 +391,13 @@ class GaiaOSDriver(NetworkDriver):
         """
         RE_INTDATA = r'\s+(.*)\n\s+\w+\s+(.*)\n\s+\w+-\w+\s(.*)\n.*\n' \
                      r'\s+\w+-\w+\s\w+\s+(.*)\n\s+\w+\s+(.*)(\n.*)\n\s+\w+\s([0-9]+|N/A).*\n(.*\n){4}\s+\w+(.*)\n.*'
-        # capture-groups :
-        # 0 nic
-        # 1 is_enabled
-        # 2 mac
-        # 3 is up
-        # 4 mtu
-        # 6 speed
-        # 8 descr
+        RE_NICDATA = {'description': r'\s+comments.*',
+                      'is_enabled': r'',
+                      'is_up': r'',
+                      'mac_address': r'',
+                      'speed': r'',
+                      'mtu': r'',
+                      }
         interface_table = {}
         try:
             self.device.send_command('set clienv rows 0')
@@ -426,8 +425,6 @@ class GaiaOSDriver(NetworkDriver):
                     interface_table[intdata[0][0]]['is_up'] = False
                 else:
                     interface_table[intdata[0][0]]['is_up'] = True
-
-
         except Exception as e:
             raise RuntimeError(e)
         return interface_table
