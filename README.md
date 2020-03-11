@@ -20,7 +20,7 @@ not supported:
  - R77.30 SPLAT
  
 Limitations:
- - vsx context switches are not implemented yet
+ - vsx not implemented yet
  
  
 ## install
