@@ -389,14 +389,12 @@ class GaiaOSDriver(NetworkDriver):
                                       'speed': 100,
                                       'mtu': 1500   }}
                 """
-        RE_INTDATA = r'\s+(.*)\n\s+\w+\s+(.*)\n\s+\w+-\w+\s(.*)\n.*\n' \
-                     r'\s+\w+-\w+\s\w+\s+(.*)\n\s+\w+\s+(.*)(\n.*)\n\s+\w+\s([0-9]+|N/A).*\n(.*\n){4}\s+\w+(.*)\n.*'
-        RE_NICDATA = {'description': r'\s+comments.*',
-                      'is_enabled': r'\s+state.*',
-                      'is_up': r'',
-                      'mac_address': r'',
-                      'speed': r'',
-                      'mtu': r''
+        RE_NICDATA = {'description': re.compile('\s+comments(.*|$)'),
+                      'is_enabled': re.compile('\s+state\s(.*)$'),
+                      'is_up': re.compile('\s+[Ll]ink-[Ss]tate\s[Ll]ink\s(.*)$'),
+                      'mac_address': re.compile('\s+[Mm]ac-[Aa]ddr\s(.*)$'),
+                      'speed': re.compile('\s+[Ll]ink-[Ss]peed\s([0-9]+).*$'),
+                      'mtu': re.compile('\s+[Mm]tu\s(.*)$')
                       }
         interface_table = {}
         try:
@@ -405,33 +403,43 @@ class GaiaOSDriver(NetworkDriver):
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
 
-        output = str(output).split('Interface')
+        output = str(output).split('Interface ')
         for item in output:
             if len(item) == 0:
                 output.remove(item)
-        print(output)
-
-        """
-        for i in range(len(output)):
-            intdata = re.findall(RE_INTDATA, output[i])
-            interface_table[intdata[0][0]] = {}
-            interface_table[intdata[0][0]]['last_flapped'] = -1.0
-            interface_table[intdata[0][0]]['mac_address'] = intdata[0][2]
-            interface_table[intdata[0][0]]['mtu'] = intdata[0][4]
-            interface_table[intdata[0][0]]['description'] = intdata[0][8]
-            if str.isnumeric(intdata[0][6]):
-                interface_table[intdata[0][0]]['speed'] = intdata[0][6]
-            else:
-                interface_table[intdata[0][0]]['speed'] = 0
-            if intdata[0][1] == 'off':
-                interface_table[intdata[0][0]]['is_enabled'] = False
-            else:
-                interface_table[intdata[0][0]]['is_enabled'] = True
-            if intdata[0][3] == 'down':
-                interface_table[intdata[0][0]]['is_up'] = False
-            else:
-                interface_table[intdata[0][0]]['is_up'] = True
-        """
+        for item in output:
+            item = str(item).splitlines()
+            # set entry defaults
+            interface_table[item[0]] = {}
+            interface_table[item[0]]['is_enabled'] = False
+            interface_table[item[0]]['is_up'] = False
+            interface_table[item[0]]['mtu'] = 0
+            interface_table[item[0]]['description'] = ''
+            interface_table[item[0]]['mac_address'] = 'Not configured'
+            interface_table[item[0]]['speed'] = 0
+            for line in item:
+                if re.match(RE_NICDATA['is_enabled'], line) is not None:
+                    if re.findall(RE_NICDATA['is_enabled'], line) == 'off':
+                        interface_table[item[0]]['is_enabled'] = False
+                    else:
+                        interface_table[item[0]]['is_enabled'] = True
+                if re.match(RE_NICDATA['is_up'], line) is not None:
+                    if re.findall(RE_NICDATA['is_up'], line) == 'down':
+                        interface_table[item[0]]['is_up'] = False
+                    else:
+                        interface_table[item[0]]['is_up'] = True
+                if re.match(RE_NICDATA['mtu'], line) is not None:
+                    interface_table[item[0]]['mtu'] = re.findall(RE_NICDATA['mtu'], line)[0]
+                if re.match(RE_NICDATA['description'], line) is not None:
+                    interface_table[item[0]]['description'] = re.findall(RE_NICDATA['description'], line)[0]
+                    if re.match(r'^\s+$',  interface_table[item[0]]['description']):
+                        interface_table[item[0]]['description'] = ''
+                if re.match(RE_NICDATA['mac_address'], line) is not None:
+                    interface_table[item[0]]['mac_address'] = re.findall(RE_NICDATA['mac_address'], line)[0]
+                if re.match(RE_NICDATA['mac_address'], line) is not None:
+                    interface_table[item[0]]['mac_address'] = re.findall(RE_NICDATA['mac_address'], line)[0]
+                if re.match(RE_NICDATA['speed'], line) is not None:
+                    interface_table[item[0]]['speed'] = re.findall(RE_NICDATA['speed'], line)[0]
         return interface_table
 
     def get_interfaces_ip(self):
@@ -452,41 +460,38 @@ class GaiaOSDriver(NetworkDriver):
                     u'Vlan200': {   'ipv4': {   u'10.63.176.57': {   'prefix_length': 29}}}}
 
         """
-        RE_INTDATA = r'\s+(.*)\n(.*\n){12}\s+\w+-\w+\s(.*)\n\s+\w+-\w+\s(.*)\n.*'
-        # capture-groups :
-        # 0 nic
-        # 2 ipv4
-        # 3 ipv6
+        RE_NICDATA = {'ipv4': re.compile('\s+ipv4-ad\w+\s([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})/([0-9]{1,3})$'),
+                      'ipv6': re.compile(r'\s+ipv6-(\w+-\w+-)?\w+\s(.*)/([0-9]{1,3})$')
+                      }
         interface_table = {}
         try:
             self.device.send_command('set clienv rows 0')
             output = self.device.send_command('show interfaces all')
-            output = str(output).split('Interface')
-            for item in output:
-                if len(item) == 0:
-                    output.remove(item)
-            for i in range(len(output)):
-                intdata = re.findall(RE_INTDATA, output[i])
-                interface_table[intdata[0][0]] = {}
-                if intdata[0][2] != 'Not Configured':
-                    interface_table[intdata[0][0]]['ipv4'] = {}
-                    ip_addr = str(intdata[0][2]).split('/')
-                    if len(ip_addr) > 1:
-                        interface_table[intdata[0][0]]['ipv4'][ip_addr[0]] = {'prefix_length': int(ip_addr[1])}
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        output = str(output).split('Interface ')
+        for item in output:
+            if len(item) == 0:
+                output.remove(item)
+        for item in output:
+            item = str(item).splitlines()
+            # set entry defaults
+            for line in item:
+                if re.match(RE_NICDATA['ipv4'], line) is not None:
+                    if item[0] not in interface_table:
+                        interface_table[item[0]] = {}
+                    ip_addr = re.findall(RE_NICDATA['ipv4'], line)
+                    interface_table[item[0]]['ipv4'] = {ip_addr[0][0]: {'prefix_length': ip_addr[0][1]}}
+                if re.match(RE_NICDATA['ipv6'], line) is not None:
+                    if item[0] not in interface_table:
+                        interface_table[item[0]] = {}
+                    ip_addr = re.findall(RE_NICDATA['ipv6'], line)
+                    if len(ip_addr[0]) == 2:
+                        interface_table[item[0]]['ipv6'] = {ip_addr[0][0]: {'prefix_length': ip_addr[0][1]}}
                     else:
-                        raise ValueError('unknown ip-address format')
-                if intdata[0][3] != 'Not Configured':
-                    interface_table[intdata[0][0]]['ipv6'] = {}
-                    ip_addr = str(intdata[0][3]).split('/')
-                    if len(ip_addr) > 1:
-                        interface_table[intdata[0][0]]['ipv6'][ip_addr[0]] = {'prefix_length': int(ip_addr[1])}
-                    else:
-                        raise ValueError('unknown ip-address format')
-        except Exception as e:
-            raise RuntimeError(e)
+                        interface_table[item[0]]['ipv6'] = {ip_addr[0][1]: {'prefix_length': ip_addr[0][2]}}
         return interface_table
 
-    
     def get_virtual_systems(self) -> dict:
         """
             | Get virtual systems information.   
