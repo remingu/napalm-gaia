@@ -20,7 +20,7 @@ not supported:
  - R77.30 SPLAT
  
 Limitations:
- - vsx not implemented yet
+ - vsx not supported
  
  
 ## install
