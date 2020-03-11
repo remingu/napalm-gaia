@@ -177,6 +177,7 @@ class GaiaOSDriver(NetworkDriver):
                                     pass
                             if i is False:
                                 users[user]['sshkeys'].append('')
+                        self._exit_expert_mode()
                     else:
                         raise RuntimeError('unable to enter expert-mode')
             else:
@@ -426,8 +427,6 @@ class GaiaOSDriver(NetworkDriver):
                     interface_table[intdata[0][0]]['is_up'] = False
                 else:
                     interface_table[intdata[0][0]]['is_up'] = True
-
-
         except Exception as e:
             raise RuntimeError(e)
         return interface_table
