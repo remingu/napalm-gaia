@@ -359,74 +359,79 @@ class GaiaOSDriver(NetworkDriver):
     
     def get_interfaces(self) -> dict:
         """
-            | Get interface details.
-            | last_flapped is not implemented and will return -1.
-            | Virtual interfaces speed will return 0.
+                    | Get interface details.
+                    | last_flapped is not implemented and will return -1.
+                    | Virtual interfaces speed will return 0.
 
-            :return: dict
+                    :return: dict
 
-            example::
+                    example::
 
-                {u'Vlan1': {'description': u'N/A',
-                            'is_enabled': True,
-                            'is_up': True,
-                            'last_flapped': -1.0,
-                            'mac_address': u'a493.4cc1.67a7',
-                            'speed': 100,
-                            'mtu': 1500},
-                 u'Vlan100': {'description': u'Data Network',
-                              'is_enabled': True,
-                              'is_up': True,
-                              'last_flapped': -1.0,
-                              'mac_address': u'a493.4cc1.67a7',
-                              'speed': 100,
-                              'mtu': 65536},
-                 u'Vlan200': {'description': u'Voice Network',
-                              'is_enabled': True,
-                              'is_up': True,
-                              'last_flapped': -1.0,
-                              'mac_address': u'a493.4cc1.67a7',
-                              'speed': 100,
-                              'mtu': 1500   }}
-        """
+                        {u'Vlan1': {'description': u'N/A',
+                                    'is_enabled': True,
+                                    'is_up': True,
+                                    'last_flapped': -1.0,
+                                    'mac_address': u'a493.4cc1.67a7',
+                                    'speed': 100,
+                                    'mtu': 1500},
+                         u'Vlan100': {'description': u'Data Network',
+                                      'is_enabled': True,
+                                      'is_up': True,
+                                      'last_flapped': -1.0,
+                                      'mac_address': u'a493.4cc1.67a7',
+                                      'speed': 100,
+                                      'mtu': 65536},
+                         u'Vlan200': {'description': u'Voice Network',
+                                      'is_enabled': True,
+                                      'is_up': True,
+                                      'last_flapped': -1.0,
+                                      'mac_address': u'a493.4cc1.67a7',
+                                      'speed': 100,
+                                      'mtu': 1500   }}
+                """
         RE_INTDATA = r'\s+(.*)\n\s+\w+\s+(.*)\n\s+\w+-\w+\s(.*)\n.*\n' \
                      r'\s+\w+-\w+\s\w+\s+(.*)\n\s+\w+\s+(.*)(\n.*)\n\s+\w+\s([0-9]+|N/A).*\n(.*\n){4}\s+\w+(.*)\n.*'
         RE_NICDATA = {'description': r'\s+comments.*',
-                      'is_enabled': r'',
+                      'is_enabled': r'\s+state.*',
                       'is_up': r'',
                       'mac_address': r'',
                       'speed': r'',
-                      'mtu': r'',
+                      'mtu': r''
                       }
         interface_table = {}
         try:
             self.device.send_command('set clienv rows 0')
             output = self.device.send_command('show interfaces all')
-            output = str(output).split('Interface')
-            for item in output:
-                if len(item) == 0:
-                    output.remove(item)
-            for i in range(len(output)):
-                intdata = re.findall(RE_INTDATA, output[i])
-                interface_table[intdata[0][0]] = {}
-                interface_table[intdata[0][0]]['last_flapped'] = -1.0
-                interface_table[intdata[0][0]]['mac_address'] = intdata[0][2]
-                interface_table[intdata[0][0]]['mtu'] = intdata[0][4]
-                interface_table[intdata[0][0]]['description'] = intdata[0][8]
-                if str.isnumeric(intdata[0][6]):
-                    interface_table[intdata[0][0]]['speed'] = intdata[0][6]
-                else:
-                    interface_table[intdata[0][0]]['speed'] = 0
-                if intdata[0][1] == 'off':
-                    interface_table[intdata[0][0]]['is_enabled'] = False
-                else:
-                    interface_table[intdata[0][0]]['is_enabled'] = True
-                if intdata[0][3] == 'down':
-                    interface_table[intdata[0][0]]['is_up'] = False
-                else:
-                    interface_table[intdata[0][0]]['is_up'] = True
-        except Exception as e:
-            raise RuntimeError(e)
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+
+        output = str(output).split('Interface')
+        for item in output:
+            if len(item) == 0:
+                output.remove(item)
+        print(output)
+
+        """
+        for i in range(len(output)):
+            intdata = re.findall(RE_INTDATA, output[i])
+            interface_table[intdata[0][0]] = {}
+            interface_table[intdata[0][0]]['last_flapped'] = -1.0
+            interface_table[intdata[0][0]]['mac_address'] = intdata[0][2]
+            interface_table[intdata[0][0]]['mtu'] = intdata[0][4]
+            interface_table[intdata[0][0]]['description'] = intdata[0][8]
+            if str.isnumeric(intdata[0][6]):
+                interface_table[intdata[0][0]]['speed'] = intdata[0][6]
+            else:
+                interface_table[intdata[0][0]]['speed'] = 0
+            if intdata[0][1] == 'off':
+                interface_table[intdata[0][0]]['is_enabled'] = False
+            else:
+                interface_table[intdata[0][0]]['is_enabled'] = True
+            if intdata[0][3] == 'down':
+                interface_table[intdata[0][0]]['is_up'] = False
+            else:
+                interface_table[intdata[0][0]]['is_up'] = True
+        """
         return interface_table
 
     def get_interfaces_ip(self):
