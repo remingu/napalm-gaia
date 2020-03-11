@@ -730,7 +730,9 @@ class GaiaOSDriver(NetworkDriver):
              * os_version - String with the OS version running on the device.
              * serial_number - Serial number of the device
              * interface_list - List of the interfaces of the device
-            Example::
+           
+           Example::
+           
                 {
                 'uptime': 151005.57332897186,
                 'vendor': u'Arista',
