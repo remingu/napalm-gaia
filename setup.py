@@ -27,7 +27,7 @@ setup(
     description='napalm driver plugin for checkpoint gaia-os',
     install_requires=reqs,
     keywords='development napalm checkpoint gaia ',
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     project_urls={
         'Bug Reports': 'https://github.com/remingu/napalm-gaia/issues',
         'Source': 'https://github.com/remingu/napalm-gaia',
