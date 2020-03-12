@@ -1,1 +1,3 @@
 include requirements*
+include changelog.txt
+
