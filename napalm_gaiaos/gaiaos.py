@@ -391,7 +391,7 @@ class GaiaOSDriver(NetworkDriver):
               'current_conns': '0',
               'peak_conns': '0',
               'conns_limit': '0',
-              'if_tab_32': {
+              'iftab32': {
                 'bond0': {
                   'in': {
                     'accept': '0',
@@ -406,7 +406,7 @@ class GaiaOSDriver(NetworkDriver):
                     'log': '0'
                   }
                 }
-                'if_tab_64': {
+                'iftab64': {
                   'bond0': {
                     'in': {
                       'accept': '0',
@@ -423,12 +423,6 @@ class GaiaOSDriver(NetworkDriver):
                   }
                 }
         """
-
-        regex = r'.*\snot a FireWall-1 module'
-        command = 'fw stat'
-        output = self.device.send_command(command)
-        if re.match(regex, output) is not None:
-            raise ValueError('firewall module not enabled')
         try:
             policy_regex = r'([A-z. ]+)(?:\:)(?:\s+)([A-z0-9-_:\ ]+)'
             policy_if_regex = r'^(?:\|)([A-z0-9.]+)(?:\s+\||\|)([A-z]+)' \
@@ -436,6 +430,8 @@ class GaiaOSDriver(NetworkDriver):
                               r'(\d+)(?:\s+\||\|\s+|\|)(\d+)(?:\s+\||\|\s+|\|)(\d+)'
             command = 'cpstat -f policy fw'
             output = self.device.send_command(command)
+            if len(output) <= 2:
+                raise ValueError('firewall module not enabled')
             policy_list = []
             for match in re.finditer(policy_regex, output, re.M):
                 policy_list.append(match.group(2))
