@@ -423,6 +423,12 @@ class GaiaOSDriver(NetworkDriver):
                   }
                 }
         """
+
+        regex = r'.*\snot a FireWall-1 module'
+        command = 'fw stat'
+        output = self.device.send_command(command)
+        if re.match(regex, output) is not None:
+            raise ValueError('firewall module not enabled')
         try:
             policy_regex = r'([A-z. ]+)(?:\:)(?:\s+)([A-z0-9-_:\ ]+)'
             policy_if_regex = r'^(?:\|)([A-z0-9.]+)(?:\s+\||\|)([A-z]+)' \
@@ -1050,8 +1056,6 @@ class GaiaOSDriver(NetworkDriver):
         :return:
         """
         raise NotImplementedError
-
-
 
     def get_interfaces_counters(self):
         """
