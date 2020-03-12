@@ -4,6 +4,7 @@ import time
 import re
 import socket
 import ipaddress
+import string
 import napalm
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionException, SessionLockedException,\
@@ -41,7 +42,7 @@ class GaiaOSDriver(NetworkDriver):
     def close(self):
         self._exit_expert_mode()
         self._netmiko_close()
-    
+
     def cli(self, commands: list) -> dict:
         """
         | Will execute a list of commands and return the output in a dictionary format.
@@ -82,7 +83,7 @@ class GaiaOSDriver(NetworkDriver):
             return output
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-    
+
     def get_users(self, **kwargs) -> dict:
         """
             | Returns a dictionary with the configured users.
@@ -245,7 +246,7 @@ class GaiaOSDriver(NetworkDriver):
                                     'state': str(table_entry.group(5))}
                                    )
         return arp_entries
-      
+
     def get_config(self, retrieve='all') -> dict:
         """
         | Get host configuration. Returns a string delimited with a '\n' for further parsing.
@@ -391,7 +392,7 @@ class GaiaOSDriver(NetworkDriver):
               'current_conns': '0',
               'peak_conns': '0',
               'conns_limit': '0',
-              'if_tab_32': {
+              'iftab32': {
                 'bond0': {
                   'in': {
                     'accept': '0',
@@ -406,7 +407,7 @@ class GaiaOSDriver(NetworkDriver):
                     'log': '0'
                   }
                 }
-                'if_tab_64': {
+                'iftab64': {
                   'bond0': {
                     'in': {
                       'accept': '0',
@@ -423,45 +424,50 @@ class GaiaOSDriver(NetworkDriver):
                   }
                 }
         """
-
-        regex = r'.*\snot a FireWall-1 module'
-        command = 'fw stat'
-        output = self.device.send_command(command)
-        if re.match(regex, output) is not None:
-            raise ValueError('firewall module not enabled')
         try:
-            policy_regex = r'([A-z. ]+)(?:\:)(?:\s+)([A-z0-9-_:\ ]+)'
-            policy_if_regex = r'^(?:\|)([A-z0-9.]+)(?:\s+\||\|)([A-z]+)' \
-                              r'(?:\s+\||\|)(?:\s+|)(\d+)(?:\s+\||\|\s+|\|)' \
-                              r'(\d+)(?:\s+\||\|\s+|\|)(\d+)(?:\s+\||\|\s+|\|)(\d+)'
+            matchstr = ('Policy', 'connections', 'limit')
             command = 'cpstat -f policy fw'
             output = self.device.send_command(command)
-            policy_list = []
-            for match in re.finditer(policy_regex, output, re.M):
-                policy_list.append(match.group(2))
-            policy = {
-                'name': str(policy_list[1]),
-                'install_time': str(policy_list[2]),
-                'current_conns': int(policy_list[3]),
-                'peak_conns': int(policy_list[4]),
-                'conns_limit': int(policy_list[5])
-            }
+            if len(output) <= 2:
+                raise ValueError('firewall module not enabled')
+            rows = output.read().split('\n')
+            policy = {}
+            policy_value = []
+            for row in rows:
+                if any(s in row for s in [m for m in matchstr]):
+                    policy_value.append((row.split(':',1)[1].strip()))
+            policy.update(
+                {
+                    'name': str(policy_value[0]),
+                    'install_time': str(policy_value[1]),
+                    'current_conns': int(policy_value[2]),
+                    'peak_conns': int(policy_value[3]),
+                    'conns_limit': int(policy_value[4])
+                }
+            )
             if interfaces is True:
-                for match in re.finditer(policy_if_regex, output, re.M):
-                    counters = {
-                        'accept': int(match.group(4)),
-                        'drop': int(match.group(5)),
-                        'reject': int(match.group(6)),
-                        'log': int(match.group(7))
-                    }
-                    if match.group(1) is None:
-                        if match.group(2) not in policy[iftab]:
-                            policy[iftab][match.group(2)] = {}
-                        policy[iftab][match.group(2)][match.group(3)] = counters
-                    else:
-                        iftab = 'iftab64' if re.sub(r'\D', '', match.group(1)) == '64' else 'iftab32'
-                        policy[iftab] = {}
-            return policy
+                for row in rows:
+                    try:
+                        if 'table' in row:
+                            arch = 'iftab32' if '64' in row else 'iftab64'
+                        elif row[0] in '|' and row[1] in string.ascii_lowercase:
+                            name, dir, accept, drop, reject, log = [
+                                item.strip(' ')
+                                for item in row.strip('|').split('|')
+                            ]
+                            if arch not in policy:
+                                policy[arch] = {}
+                            if name not in policy[arch]:
+                                policy[arch][name] = {}
+                            policy[arch][name][dir] = {
+                                'accept': str(accept),
+                                'drop': str(drop),
+                                'reject': str(reject),
+                                'log': str(log)
+                            }
+                    except IndexError:
+                        pass
+                return policy
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
         except Exception as e:
@@ -992,7 +998,7 @@ class GaiaOSDriver(NetworkDriver):
                 return False
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-    
+
     def _set_virtual_system(self, vsid: int) -> bool:
         """
             | Switch to VSX context. Raises RuntimeError if failed.
