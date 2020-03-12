@@ -467,7 +467,7 @@ class GaiaOSDriver(NetworkDriver):
                             }
                     except IndexError:
                         pass
-                return policy
+            return policy
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
         except Exception as e:
