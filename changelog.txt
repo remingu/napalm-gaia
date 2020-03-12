@@ -1,3 +1,7 @@
+0.0.12
+-updated get_interfaces && get_interfaces_ip
+-added fw_get_policy()
+-added get_virtual_systems()
 0.0.11
 -changed exit behavior of get_users() to have consistent behavior
 -added changelog
