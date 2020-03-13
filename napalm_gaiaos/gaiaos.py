@@ -1081,7 +1081,50 @@ class GaiaOSDriver(NetworkDriver):
         :param kwargs:
         :return:
         """
-        raise NotImplementedError
+        mac_add_tab = []
+        mac_temp = {
+            'interface': None,
+            'mac': None,
+            'vlan': None,
+            'static': None,
+            'active': None,
+            'moves': None,
+            'last_move': None
+        }
+        if self._check_expert_mode():
+            mac_tab_regex = r'^([0-9.]+)\s(dev\s[A-z0-9.]+)\s(lladdr\s[A-z0-9:]+)\s(?:ref\s\d+\s|)(used\s\d+)' \
+                            r'(?:[/0-9]+\s|[/0-9]+\sprobes\s\d+\s)([A-z]+)$'
+            command = 'ip -s neigh'
+            output = self.device.send_command(command)
+            rows = output.split('\n')
+            for row in rows:
+                for match in re.finditer(mac_tab_regex, row, re.M):
+                    mac_add_tab.append(mac_temp)
+                    mac_add_tab[-1] = {
+                        'interface': match.group(2).split()[1],
+                        'mac': match.group(3).split()[1],
+                        'static': ('True' if 'PERMANENT' in match.group(5) else 'False'),
+                        'active': ('True' if ('REACHABLE' or 'STALE') in match.group(4).split()[1] else 'False'),
+                        'last_move': match.group(5).split()[1],
+                    }
+        else:
+            command1 = 'show arp dynamic all'
+            command2 = 'show arp static all'
+            output1 = self.device.send_command(command1)
+            output2 = self.device.send_command(command2)
+            dynamic = output1.read()
+            static = output2.read()
+            for output in (dynamic, static):
+                rows = output.split('\n')
+                for row in rows:
+                    if re.search(r'^[0-9]', row):
+                        mac_add_tab.append(mac_temp)
+                        ip, mac = row.split()
+                        mac_add_tab[-1] = {
+                            'mac': mac,
+                            'static': ('True' if mac in static else 'False')
+                        }
+        return mac_add_tab
 
     def get_network_instances(self, **kwargs):
         """
