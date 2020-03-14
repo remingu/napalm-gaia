@@ -225,8 +225,8 @@ class GaiaOSDriver(NetworkDriver):
 
         arptable_regex = ()
         commands = 'ip -statistics show'
-        arptable_regex = r'^([0-9.:a-f]+)\sdev\s([a-zA-Z0-9._-]+)\slladdr\s([0-9a-f:]+)\s' \
-                         r'ref\s[0-9]+\sused\s([0-9]+).*probes\s[0-9]+\s([a-zA-Z]+)*$'
+        arptable_regex = '^([0-9.]+)\sdev\s([A-z0-9.]+)\slladdr\s([A-z0-9:]+)\s' \
+                         '(?:ref\s\d+\s|)used\s(\d+)(?:[/0-9]+\s|[/0-9]+\sprobes\s\d+\s)([A-z]+)$'
         command = 'ip -stat neigh'
         arp_entries = []
         if self._enter_expert_mode() is True:
