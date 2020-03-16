@@ -642,9 +642,7 @@ class GaiaOSDriver(NetworkDriver):
                 command2 = 'show arp static all'
                 output1 = self.device.send_command(command1)
                 output2 = self.device.send_command(command2)
-                dynamic = output1.read()
-                static = output2.read()
-                for output in (dynamic, static):
+                for idx, output in enumerate([output1, output2]):
                     rows = output.split('\n')
                     for row in rows:
                         if re.search(mac_tab_regex, row):
@@ -655,7 +653,7 @@ class GaiaOSDriver(NetworkDriver):
                             mac_tab.append(ret_temp.copy())
                             mac_tab[-1].update(
                                 mac = str(mac),
-                                static = (bool('True' if mac in static else 'False'))
+                                static = (bool('True' if mac in idx == 1 else 'False'))
                             )
             return mac_tab
         except (socket.error, EOFError) as e:
