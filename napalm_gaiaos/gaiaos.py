@@ -670,7 +670,7 @@ class GaiaOSDriver(NetworkDriver):
                             mac_tab.append(ret_temp.copy())
                             mac_tab[-1].update(
                                 mac = str(mac),
-                                static = ('True' if mac in idx == 1 else 'False')
+                                static = ('True' if idx == 1 else 'False')
                             )
             return mac_tab
         except (socket.error, EOFError) as e:
