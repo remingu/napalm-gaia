@@ -581,7 +581,88 @@ class GaiaOSDriver(NetworkDriver):
         except Exception as e:
             raise Exception(e)
         return interface_table
-    
+
+    def get_mac_address_table(self) -> list:
+        """
+            | Get MAC address table. More details with expert mode.
+            | Returns list of dicts with the following keys and values.
+            | Default value is None.
+
+            |   * interface (str)
+            |   * mac (str)
+            |   * vlan (str)
+            |   * static (bool)
+            |   * active (bool)
+            |   * moves (int)
+            |   * last_move (int)
+
+        example::
+            {
+                'interface': 'eth0',
+                'mac': '00:00:00:00:00:00',
+                'vlan': None,
+                'static': True,
+                'active': 'True',
+                'moves': None,
+                'last_move': None
+            }
+
+        :return: list
+        """
+        mac_tab = []
+        ret_temp = {
+            'interface': None,
+            'mac': None,
+            'vlan': None,
+            'static': None,
+            'active': None,
+            'moves': None,
+            'last_move': None
+        }
+        try:
+            if self._check_expert_mode():
+                mac_tab_regex = r'^([0-9.]+)\s(dev\s[A-z0-9.]+)\s(lladdr\s[A-z0-9:]+)\s(?:ref\s\d+\s|)(used\s\d+)' \
+                                r'(?:[/0-9]+\s|[/0-9]+\sprobes\s\d+\s)([A-z]+)$'
+                command = 'ip -s neigh'
+                output = self.device.send_command(command)
+                rows = output.split('\n')
+                for row in rows:
+                    for match in re.finditer(mac_tab_regex, row, re.M):
+                        mac_tab.append(ret_temp.copy())
+                        mac_tab[-1].update(
+                            interface = str(match.group(2).split()[1]),
+                            mac = str(match.group(3).split()[1]),
+                            static = bool(('True' if 'PERMANENT' in match.group(5) else 'False')),
+                            active = bool(('True' if ('REACHABLE' in match.group(5)) or ('STALE' in match.group(5)) else 'False')),
+                            last_move = int(match.group(4).split()[1]),
+                        )
+            else:
+                mac_tab_regex = r'^[0-9]'
+                command1 = 'show arp dynamic all'
+                command2 = 'show arp static all'
+                output1 = self.device.send_command(command1)
+                output2 = self.device.send_command(command2)
+                dynamic = output1.read()
+                static = output2.read()
+                for output in (dynamic, static):
+                    rows = output.split('\n')
+                    for row in rows:
+                        if re.search(mac_tab_regex, row):
+                            try:
+                                ip, mac = row.split()
+                            except ValueError:
+                                continue
+                            mac_tab.append(ret_temp.copy())
+                            mac_tab[-1].update(
+                                mac = str(mac),
+                                static = (bool('True' if mac in static else 'False'))
+                            )
+            return mac_tab
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            raise(e)
+
     def get_virtual_systems(self) -> dict:
         """
             | Get virtual systems information.   
