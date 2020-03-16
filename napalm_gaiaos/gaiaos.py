@@ -632,8 +632,8 @@ class GaiaOSDriver(NetworkDriver):
                         mac_tab[-1].update(
                             interface = str(match.group(2).split()[1]),
                             mac = str(match.group(3).split()[1]),
-                            static = bool(('True' if 'PERMANENT' in match.group(5) else 'False')),
-                            active = bool(('True' if ('REACHABLE' in match.group(5)) or ('STALE' in match.group(5)) else 'False')),
+                            static = ('True' if 'PERMANENT' in match.group(5) else 'False'),
+                            active = ('True' if ('REACHABLE' in match.group(5)) or ('STALE' in match.group(5)) else 'False'),
                             last_move = int(match.group(4).split()[1]),
                         )
             else:
@@ -653,7 +653,7 @@ class GaiaOSDriver(NetworkDriver):
                             mac_tab.append(ret_temp.copy())
                             mac_tab[-1].update(
                                 mac = str(mac),
-                                static = (bool('True' if mac in idx == 1 else 'False'))
+                                static = ('True' if mac in idx == 1 else 'False')
                             )
             return mac_tab
         except (socket.error, EOFError) as e:
