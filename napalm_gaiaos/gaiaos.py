@@ -758,6 +758,7 @@ class GaiaOSDriver(NetworkDriver):
         #   (i.e. " 1 day 1 hour 5 minutes")
         # need to doublecheck with realworld deployments(to less uptime in lab)
         # disable meanwhile and set to zero
+        # <-- group commands to remove redundant code.
         uptime = float(0)
         try:
             hostname = self.device.send_command('show hostname')
