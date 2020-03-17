@@ -746,7 +746,11 @@ class GaiaOSDriver(NetworkDriver):
         :return:
         """
         retdict = {}
-        interfaces = str(self.device.send_command('show interfaces')).split('\n')
+        try:
+            self.device.send_command('set clienv rows 0')
+            interfaces = str(self.device.send_command('show interfaces')).split('\n')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
 
         # uptime requires conversion to seconds -> output format follows pattern:
         #   " 1 year 1 month 1 day 1 hour 5 minutes"
@@ -755,13 +759,19 @@ class GaiaOSDriver(NetworkDriver):
         # need to doublecheck with realworld deployments(to less uptime in lab)
         # disable meanwhile and set to zero
         uptime = float(0)
-        hostname = self.device.send_command('show hostname')
-        dns_suffix = self.device.send_command('show dns suffix')
+        try:
+            hostname = self.device.send_command('show hostname')
+            dns_suffix = self.device.send_command('show dns suffix')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
         if re.match('$', dns_suffix) is None:
             fqdn = hostname + '.' + dns_suffix
         else:
             fqdn = hostname
-        output = self.device.send_command('show version product')
+        try:
+            output = self.device.send_command('show version product')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
         output = re.match('.*(Check Point Gaia R\d+\.\d+)\s*$', output)
         if output is not None:
             os_version = output.group(1)
