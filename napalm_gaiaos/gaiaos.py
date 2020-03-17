@@ -655,7 +655,6 @@ class GaiaOSDriver(NetworkDriver):
                 }
 
         """
-
         try:
             self.device.send_command('\t')
         except (socket.error, EOFError) as e:
@@ -747,7 +746,7 @@ class GaiaOSDriver(NetworkDriver):
         :return:
         """
         retdict = {}
-        interfaces = self.device.send_command_timing('show interfaces\t', max_loops=2)
+        interfaces = str(self.device.send_command('show interfaces')).split('\n')
 
         # uptime requires conversion to seconds -> output format follows pattern:
         #   " 1 year 1 month 1 day 1 hour 5 minutes"
