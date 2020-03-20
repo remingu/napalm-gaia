@@ -1,3 +1,5 @@
+0.0.15
+- fixed issues in get facts()
 0.0.14
 - extended re in get_arp_table()
 0.0.13
