@@ -1,3 +1,19 @@
+#
+# Copyright 2020 Daniel Schlifka, Pavel Smejkal
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import logging
 import statistics
 import time
@@ -5,11 +21,13 @@ import re
 import socket
 import ipaddress
 import napalm
+import string
 from napalm.base.base import NetworkDriver
-from napalm.base.exceptions import ConnectionException, SessionLockedException,\
-                                   MergeConfigException, ReplaceConfigException,\
-                                   CommandErrorException, ConnectionClosedException,\
-                                   ValidationException
+from napalm.base.exceptions import ConnectionException, SessionLockedException, \
+    MergeConfigException, ReplaceConfigException, \
+    CommandErrorException, ConnectionClosedException, \
+    ValidationException
+
 
 class GaiaOSDriver(NetworkDriver):
     """
@@ -20,15 +38,21 @@ class GaiaOSDriver(NetworkDriver):
     """
 
     def __init__(self, hostname,
-            username='',
-            password='',
-            timeout=10,
-            optional_args=None):
+                 username='',
+                 password='',
+                 timeout=10,
+                 optional_args=None):
         self.hostname = hostname
         self.username = username
         self.password = password
         self.expert_password = '\n'
         self.timeout = timeout
+        self.vsx_state = False
+        self.dclish = False
+        self.shell_default_is_clish = True
+        self.vsid = 0
+        self.is_security_gateway = False
+        self.is_security_management = False
         self.optional_args = optional_args
         if self.optional_args is not None:
             if 'secret' in optional_args:
@@ -37,11 +61,17 @@ class GaiaOSDriver(NetworkDriver):
     def open(self):
         device_type = 'checkpoint_gaia'
         self.device = self._netmiko_open(device_type, netmiko_optional_args=self.optional_args)
+        self._get_cpenv()
+        # if default shell is bash, switch to clish
+        if self.shell_default_is_clish is True:
+            self.device.send_command('clish', expect_string=r'>')
+            # disable terminal paging
+            self.device.send_command('set clienv rows 0')
 
     def close(self):
         self._exit_expert_mode()
         self._netmiko_close()
-    
+
     def cli(self, commands: list) -> dict:
         """
         | Will execute a list of commands and return the output in a dictionary format.
@@ -70,19 +100,18 @@ class GaiaOSDriver(NetworkDriver):
                         output[cmd] = self.device.send_command(cmd)
                     else:
                         raise TypeError(
-                            'Expected <class \'str\'> not a {}'.format(
-                            type(cmd)
-                            ))
+                            'Expected <class \'str\'> not a {}'.format(type(cmd))
+                        )
             else:
                 raise TypeError(
                     'Expected <class \'list\'> not a {}'.format(
                         type(commands)
-                        )
                     )
+                )
             return output
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-    
+
     def get_users(self, **kwargs) -> dict:
         """
             | Returns a dictionary with the configured users.
@@ -245,7 +274,7 @@ class GaiaOSDriver(NetworkDriver):
                                     'state': str(table_entry.group(5))}
                                    )
         return arp_entries
-      
+
     def get_config(self, retrieve='all') -> dict:
         """
         | Get host configuration. Returns a string delimited with a '\n' for further parsing.
@@ -380,10 +409,8 @@ class GaiaOSDriver(NetworkDriver):
             |               * drop (int)
             |               * reject (int)
             |               * log (int)
-
         :param interfaces: bool
         :return: dict
-
         example::
             {
               'name': 'policy',
@@ -391,7 +418,7 @@ class GaiaOSDriver(NetworkDriver):
               'current_conns': '0',
               'peak_conns': '0',
               'conns_limit': '0',
-              'if_tab_32': {
+              'iftab32': {
                 'bond0': {
                   'in': {
                     'accept': '0',
@@ -406,7 +433,7 @@ class GaiaOSDriver(NetworkDriver):
                     'log': '0'
                   }
                 }
-                'if_tab_64': {
+                'iftab64': {
                   'bond0': {
                     'in': {
                       'accept': '0',
@@ -423,44 +450,49 @@ class GaiaOSDriver(NetworkDriver):
                   }
                 }
         """
-
-        regex = r'.*\snot a FireWall-1 module'
-        command = 'fw stat'
-        output = self.device.send_command(command)
-        if re.match(regex, output) is not None:
-            raise ValueError('firewall module not enabled')
         try:
-            policy_regex = r'([A-z. ]+)(?:\:)(?:\s+)([A-z0-9-_:\ ]+)'
-            policy_if_regex = r'^(?:\|)([A-z0-9.]+)(?:\s+\||\|)([A-z]+)' \
-                              r'(?:\s+\||\|)(?:\s+|)(\d+)(?:\s+\||\|\s+|\|)' \
-                              r'(\d+)(?:\s+\||\|\s+|\|)(\d+)(?:\s+\||\|\s+|\|)(\d+)'
+            matchstr = ('Policy', 'connections', 'limit')
             command = 'cpstat -f policy fw'
             output = self.device.send_command(command)
-            policy_list = []
-            for match in re.finditer(policy_regex, output, re.M):
-                policy_list.append(match.group(2))
-            policy = {
-                'name': str(policy_list[1]),
-                'install_time': str(policy_list[2]),
-                'current_conns': int(policy_list[3]),
-                'peak_conns': int(policy_list[4]),
-                'conns_limit': int(policy_list[5])
-            }
+            if len(output) <= 2:
+                raise ValueError('firewall module not enabled')
+            rows = output.split('\n')
+            policy = {}
+            policy_value = []
+            for row in rows:
+                if any(s in row for s in [m for m in matchstr]):
+                    policy_value.append((row.split(':', 1)[1].strip()))
+            policy.update(
+                {
+                    'name': str(policy_value[0]),
+                    'install_time': str(policy_value[1]),
+                    'current_conns': int(policy_value[2]),
+                    'peak_conns': int(policy_value[3]),
+                    'conns_limit': int(policy_value[4])
+                }
+            )
             if interfaces is True:
-                for match in re.finditer(policy_if_regex, output, re.M):
-                    counters = {
-                        'accept': int(match.group(4)),
-                        'drop': int(match.group(5)),
-                        'reject': int(match.group(6)),
-                        'log': int(match.group(7))
-                    }
-                    if match.group(1) is None:
-                        if match.group(2) not in policy[iftab]:
-                            policy[iftab][match.group(2)] = {}
-                        policy[iftab][match.group(2)][match.group(3)] = counters
-                    else:
-                        iftab = 'iftab64' if re.sub(r'\D', '', match.group(1)) == '64' else 'iftab32'
-                        policy[iftab] = {}
+                for row in rows:
+                    try:
+                        if 'table' in row:
+                            arch = 'iftab32' if '64' in row else 'iftab64'
+                        elif row[0] in '|' and row[1] in string.ascii_lowercase:
+                            name, dir, accept, drop, reject, log = [
+                                item.strip(' ')
+                                for item in row.strip('|').split('|')
+                            ]
+                            if arch not in policy:
+                                policy[arch] = {}
+                            if name not in policy[arch]:
+                                policy[arch][name] = {}
+                            policy[arch][name][dir] = {
+                                'accept': str(accept),
+                                'drop': str(drop),
+                                'reject': str(reject),
+                                'log': str(log)
+                            }
+                    except IndexError:
+                        pass
             return policy
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
@@ -468,7 +500,6 @@ class GaiaOSDriver(NetworkDriver):
             raise RuntimeError(str(e))
 
     def get_interfaces(self) -> dict:
-
         """
                     | Get interface details.
                     | last_flapped is not implemented and will return -1.
@@ -509,11 +540,9 @@ class GaiaOSDriver(NetworkDriver):
                       }
         interface_table = {}
         try:
-            self.device.send_command('set clienv rows 0')
             output = self.device.send_command('show interfaces all')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-
         output = str(output).split('Interface ')
         for item in output:
             if len(item) == 0:
@@ -543,7 +572,7 @@ class GaiaOSDriver(NetworkDriver):
                     interface_table[item[0]]['mtu'] = re.findall(RE_NICDATA['mtu'], line)[0]
                 if re.match(RE_NICDATA['description'], line) is not None:
                     interface_table[item[0]]['description'] = re.findall(RE_NICDATA['description'], line)[0]
-                    if re.match(r'^\s+$',  interface_table[item[0]]['description']):
+                    if re.match(r'^\s+$', interface_table[item[0]]['description']):
                         interface_table[item[0]]['description'] = ''
                 if re.match(RE_NICDATA['mac_address'], line) is not None:
                     interface_table[item[0]]['mac_address'] = re.findall(RE_NICDATA['mac_address'], line)[0]
@@ -576,7 +605,6 @@ class GaiaOSDriver(NetworkDriver):
                       }
         interface_table = {}
         try:
-            self.device.send_command('set clienv rows 0')
             output = self.device.send_command('show interfaces all')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
@@ -648,6 +676,16 @@ class GaiaOSDriver(NetworkDriver):
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
 
+    def set_virtual_system(self, vsid: int) -> bool:
+        if self.vsx_state is True:
+            if isinstance(vsid, int):
+                self.vsid = vsid
+                self._set_virtual_system(vsid)
+            else:
+                raise ValidationException('vsid must be <int>')
+        else:
+            raise ValidationException('VSX not enabled')
+
     def _enter_expert_mode(self) -> bool:
         """
             :return: bool
@@ -660,11 +698,12 @@ class GaiaOSDriver(NetworkDriver):
                     self.device.set_base_prompt(r'#')
                     self.device.send_command(r'unset TMOUT')
                 return self._check_expert_mode()
-
+        except OSError as e:
+            raise OSError('unable to enter expert mode - was the expert password set?')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
         except Exception as e:
-            raise RuntimeError(e)
+            return False
 
     def _exit_expert_mode(self) -> bool:
         """
@@ -673,6 +712,8 @@ class GaiaOSDriver(NetworkDriver):
         try:
             if self._check_expert_mode() is True:
                 self.device.send_command('exit', expect_string=r'>')
+                if self.vsx_state is True:
+                    self.set_virtual_system(self.vsid)
                 if self._check_expert_mode() is False:
                     return True
                 else:
@@ -698,6 +739,29 @@ class GaiaOSDriver(NetworkDriver):
         except Exception as e:
             raise RuntimeError(e)
 
+    def _enter_clish_mode(self):
+        if self._check_expert_mode() is True and self.shell_default_is_clish is False:
+            try:
+                self.device.send_command('clish', expect_string='>')
+                self.device.send_command('lock database override')
+                return True
+            except (socket.error, EOFError) as e:
+                raise ConnectionClosedException(str(e))
+            except Exception as e:
+                return False
+
+    def _exit_clish_mode(self):
+        if self._check_expert_mode() is False and self.shell_default_is_clish is False:
+            try:
+                self.device.send_command('exit', expect_string='#')
+                return True
+            except (socket.error, EOFError) as e:
+                raise ConnectionClosedException(str(e))
+            except Exception as e:
+                return False
+        else:
+            pass
+
     def send_clish_cmd(self, cmd: str) -> str:
         """
             send clish command
@@ -705,13 +769,14 @@ class GaiaOSDriver(NetworkDriver):
             :param cmd: str
             :return: (str)
         """
-        try:
-            output = self.device.send_command(cmd)
-            return output
-        except (socket.error, EOFError) as e:
-            raise ConnectionClosedException(str(e))
-        except Exception as e:
-            raise RuntimeError(e)
+        if self._check_expert_mode() is False and self.shell_default_is_clish is True:
+            try:
+                output = self.device.send_command(cmd)
+                return output
+            except (socket.error, EOFError) as e:
+                raise ConnectionClosedException(str(e))
+            except Exception as e:
+                raise RuntimeError(e)
 
     def send_expert_cmd(self, cmd: str) -> str:
         """
@@ -720,9 +785,12 @@ class GaiaOSDriver(NetworkDriver):
             :param cmd: str
             :return: str
         """
-        if self._enter_expert_mode() is True:
+        if self._enter_expert_mode() is True and self.shell_default_is_clish is True:
             output = self.device.send_command(cmd)
             self._exit_expert_mode()
+            return output
+        elif self._enter_expert_mode() is True and self.shell_default_is_clish is False:
+            output = self.device.send_command(cmd)
             return output
         else:
             raise RuntimeError('unable to enter expert mode')
@@ -825,7 +893,7 @@ class GaiaOSDriver(NetworkDriver):
                     mobj = re.match(re_output_rtt, line)
                     if mobj is not None:
                         val = float(mobj.group(2))
-                        values.append({ 'ip-address': destination, 'rtt': val})
+                        values.append({'ip-address': destination, 'rtt': val})
                         packets_sent += 1
                     mobj = re.match(re_output_rtt_unreachable, line)
                     if mobj is not None:
@@ -836,22 +904,98 @@ class GaiaOSDriver(NetworkDriver):
                 response['success'] = {}
                 response['success']['results'] = []
                 rttstats = re.match(re_stats_rtt, output[-1])
-                response = { 'probes_sent': packets_sent,
-                    'packet_loss': packets_lost,
-                    'rtt_min': rttstats.group(1),
-                    'rtt_max': rttstats.group(3),
-                    'rtt_avg': rttstats.group(2),
-                    'rtt_stddev': rttstats.group(4),
-                    'results' : values
-                }
+                response = {'probes_sent': packets_sent,
+                            'packet_loss': packets_lost,
+                            'rtt_min': rttstats.group(1),
+                            'rtt_max': rttstats.group(3),
+                            'rtt_avg': rttstats.group(2),
+                            'rtt_stddev': rttstats.group(4),
+                            'results': values
+                            }
                 return response
         else:
             raise ValueError('invalid host format')
 
+    def get_route_to(self, **kwargs):
+        """
+        Returns a dictionary of dictionaries containing details of all available routes to a
+        destination.
+        :param destination: The destination prefix to be used when filtering the routes.
+        :param protocol (optional): Retrieve the routes only for a specific protocol.
+        :param longer (optional): Retrieve more specific routes as well.
+        Each inner dictionary contains the following fields:
+            * protocol (string)
+            * current_active (True/False)
+            * last_active (True/False)
+            * age (int)
+            * next_hop (string)
+            * outgoing_interface (string)
+            * selected_next_hop (True/False)
+            * preference (int)
+            * inactive_reason (string)
+            * routing_table (string)
+            * protocol_attributes (dictionary)
+        protocol_attributes is a dictionary with protocol-specific information, as follows:
+        - BGP
+            * local_as (int)
+            * remote_as (int)
+            * peer_id (string)
+            * as_path (string)
+            * communities (list)
+            * local_preference (int)
+            * preference2 (int)
+            * metric (int)
+            * metric2 (int)
+        - ISIS:
+            * level (int)
+        Example::
+            {
+                "1.0.0.0/24": [
+                    {
+                        "protocol"          : u"BGP",
+                        "inactive_reason"   : u"Local Preference",
+                        "last_active"       : False,
+                        "age"               : 105219,
+                        "next_hop"          : u"172.17.17.17",
+                        "selected_next_hop" : True,
+                        "preference"        : 170,
+                        "current_active"    : False,
+                        "outgoing_interface": u"ae9.0",
+                        "routing_table"     : "inet.0",
+                        "protocol_attributes": {
+                            "local_as"          : 13335,
+                            "as_path"           : u"2914 8403 54113 I",
+                            "communities"       : [
+                                u"2914:1234",
+                                u"2914:5678",
+                                u"8403:1717",
+                                u"54113:9999"
+                            ],
+                            "preference2"       : -101,
+                            "remote_as"         : 2914,
+                            "local_preference"  : 100
+                        }
+                    }
+                ]
+            }
+        """
+        if 'destination' in kwargs:
+            if self.vsx_state is False:
+                try:
+                    cmd = 'show route destination {}'.format(kwargs['destination'])
+                    output = self.device.send_command(cmd)
+                except (socket.error, EOFError) as e:
+                    raise ConnectionClosedException(str(e))
+                except Exception as e:
+                    RuntimeError(e)
+            else:
+                vs = self.get_virtual_systems()
+
+        return {}
+
+
     def get_facts(self, **kwargs):
         """
-
-
 
             Returns a dictionary containing the following information:
              * uptime - Uptime of the device in seconds.
@@ -888,16 +1032,19 @@ class GaiaOSDriver(NetworkDriver):
         # need to doublecheck with realworld deployments(to less uptime in lab)
         # disable meanwhile and set to zero
         uptime = float(0)
+        # -> command
         hostname = self.device.send_command('show hostname')
         dns_suffix = self.device.send_command('show dns suffix')
         if re.match('$', dns_suffix) is None:
             fqdn = hostname + '.' + dns_suffix
         else:
             fqdn = hostname
+        # -> command
         output = self.device.send_command('show version product')
         output = re.match('.*(Check Point Gaia R\d+\.\d+)\s*$', output)
         if output is not None:
             os_version = output.group(1)
+            # -> command
             output = self.device.send_command('show version os kernel')
             output = re.match('OS\skernel\sversion\s(.*)$', output)
             if output is not None:
@@ -908,6 +1055,8 @@ class GaiaOSDriver(NetworkDriver):
         # appliances work with('clish::cpstat -os'). platform check required (use uuid if sn is 'none'?)
         # set sn to empty string meanwhile
         #
+
+        # -> command
         output = self.device.send_command('cpstat os')
         retdict['model'] = 'unknown'
         for line in str(output).split('\n'):
@@ -982,8 +1131,8 @@ class GaiaOSDriver(NetworkDriver):
         """
             :return: bool
         """
-        vsx_regex = r'^\|.\d+\|'
-        command = 'cpstat -f stat vsx'
+        vsx_regex = r'\w+\s[Ee]nabled'
+        command = 'show vsx'
         try:
             output = self.device.send_command(command)
             if re.search(vsx_regex, output, re.M):
@@ -992,7 +1141,7 @@ class GaiaOSDriver(NetworkDriver):
                 return False
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
-    
+
     def _set_virtual_system(self, vsid: int) -> bool:
         """
             | Switch to VSX context. Raises RuntimeError if failed.
@@ -1000,7 +1149,7 @@ class GaiaOSDriver(NetworkDriver):
             :return: bool
         """
         try:
-            if self._check_vsx_state() is True:
+            if self.vsx_state is True:
                 if self._check_expert_mode() is True:
                     command = 'vsenv {}'.format(vsid)
                 else:
@@ -1016,6 +1165,88 @@ class GaiaOSDriver(NetworkDriver):
                 raise ValidationException('VSX not enabled')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
+
+    def _get_cpenv(self):
+        '''
+
+        :return: None
+        '''
+        self._get_default_shell()
+        self._check_for_dclish()
+        self._get_deployment_type()
+        if self.is_security_gateway is True:
+            self.vsx_state = self._check_vsx_state()
+
+    def _get_deployment_type(self):
+        re_sg = re.compile(r'.*not\s a\sFireWall-1\smodule.*')
+        re_fwm = re.compile(r'.*not\sa\sSecurity\sManagement\sServer.*')
+        tmpstr_sg = ''
+        tmpstr_fwm = ''
+        try:
+            if self.dclish is True:
+                tmpstr_sg = self.device.send_command('show security-gateway policy')
+            else:
+                tmpstr_sg = self.device.send_command('fw ver')
+            tmpstr_fwm = self.device.send_command('fwm ver')
+        except (socket.error, EOFError) as e:
+            raise ConnectionClosedException(str(e))
+        except Exception as e:
+            RuntimeError(e)
+        if re.match(re_sg, tmpstr_sg) is None:
+            self.is_security_gateway = True
+        if re.match(re_fwm, tmpstr_fwm) is None:
+            self.is_security_management = True
+
+    def _get_default_shell(self):
+        '''
+            checks if default shell is bash or clish
+            and sets "self.shell_default_is_clish"
+
+        :return: None
+        '''
+        if self._check_expert_mode() is True:
+            self.shell_default_is_clish = False
+
+    def _check_for_dclish(self):
+        '''
+            check if dynamic clish is installed(refer sk144112)
+            and sets "self.dclish"
+
+        :return: None
+        '''
+        tmpstr = ''
+        dclish_re = re.compile(r'.*[Dd]eprecated\s.*sk144112.*')
+        clish_re = re.compile(r'[Uu]sage.*')
+        if self.shell_default_is_clish is True:
+            try:
+                tmpstr = self.device.send_command('cplic')
+            except (socket.error, EOFError) as e:
+                raise ConnectionClosedException(str(e))
+            except Exception as e:
+                RuntimeError(e)
+            if re.match(dclish_re, tmpstr) is not None:
+                self.dclish = True
+            elif re.match(clish_re, tmpstr) is not None:
+                self.dclish = False
+            else:
+                msg = r'unable to detect clish version'
+                raise RuntimeError(msg)
+        else:
+            try:
+                self.device.send_command('clish', expect_string=r'>')
+                self.device.send_command('lock database override')
+                tmpstr = self.device.send_command('cplic')
+            except (socket.error, EOFError) as e:
+                raise ConnectionClosedException(str(e))
+            except Exception as e:
+                RuntimeError(e)
+            if re.match(dclish_re, tmpstr) is not None:
+                self.dclish = True
+            elif re.match(clish_re, tmpstr) is not None:
+                self.dclish = False
+            else:
+                msg = r'unable to detect clish version'
+                raise RuntimeError(msg)
 
     ##########################################################################################
     # """                               the tbd section                                  """ #
@@ -1237,7 +1468,7 @@ class GaiaOSDriver(NetworkDriver):
         """
         raise NotImplementedError
 
-    def load_merge_candidate(self,  **kwargs):
+    def load_merge_candidate(self, **kwargs):
         """
             not implemented yet
 

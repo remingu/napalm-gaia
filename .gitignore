@@ -132,4 +132,6 @@ dmypy.json
 .idea/
 idea/
 test.py
+test.conf
 prep_utils/
+todo-notes.md
