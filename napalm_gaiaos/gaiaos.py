@@ -1000,7 +1000,7 @@ class GaiaOSDriver(NetworkDriver):
             'U': 'Unreachable'
         }
         if 'destination' in kwargs:
-            _ = {}
+
             output = ''
             if self.vsx_state is False:
                 try:
@@ -1022,9 +1022,7 @@ class GaiaOSDriver(NetworkDriver):
                     if output[0] == 'B':
                         _ = self.helpers.routeutil.parse_bgp_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'C':
-                        x = self.helpers.routeutil.parse_connected_route(protocols[output[0]], kwargs['destination'], output)
-                        print(x)
-                        print(output)
+                        _ = self.helpers.routeutil.parse_connected_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'H':
                         _ = self.helpers.routeutil.parse_hidden_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'K':
@@ -1036,19 +1034,17 @@ class GaiaOSDriver(NetworkDriver):
                     if output[0] == 'R':
                         _ = self.helpers.routeutil.parse_rip_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'S':
-                        x = self.helpers.routeutil.parse_static_route(protocols[output[0]], kwargs['destination'], output)
-                        print(x)
-                        print(output)
+                        _ = self.helpers.routeutil.parse_static_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'U':
                         _ = self.helpers.routeutil.parse_unreachable_route(protocols[output[0]], kwargs['destination'], output)
                 else:
-                    _ = self.helpers.routeutil.parse_none_route(protocols[output[0]], kwargs['destination'])
+                    _ = self.helpers.routeutil.parse_none_route('None', kwargs['destination'])
 
             else:
                 vs = self.get_virtual_systems()
+                _ = {}
 
-
-        return {}
+        return _
 
 
     def get_facts(self, **kwargs):
