@@ -2,19 +2,6 @@ class RouteUtil:
     def __init__(self):
         pass
 
-    protocols = {
-        'A': 'Aggregate',
-        'B': 'BGP',
-        'C': 'Connected',
-        'H': 'Hidden',
-        'K': 'Kernel',
-        'O': 'OSPF',
-        'P': 'suppressed',
-        'R': 'RIP',
-        'S': 'Static',
-        'U': 'Unreachable'
-    }
-
     @staticmethod
     def parse_aggregate_route(proto: str, destination: str, output: list) -> dict:
         _ = {destination: {}}
