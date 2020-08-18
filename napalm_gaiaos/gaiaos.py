@@ -56,12 +56,15 @@ class GaiaOSDriver(NetworkDriver):
         self.is_security_gateway = False
         self.is_security_management = False
         self.optional_args = optional_args
-        self.helpers = lambda: None
-        self.helpers.iputil = iputil.IPutil()
-        self.helpers.routeutil = routeutil.RouteUtil()
+        self._init_helpers()
         if self.optional_args is not None:
             if 'secret' in optional_args:
                 self.expert_password = optional_args['secret']
+
+    def _init_helpers(self):
+        self.helpers = lambda: None
+        self.helpers.iputil = iputil.IPutil()
+        self.helpers.routeutil = routeutil.RouteUtil()
 
     def open(self):
         device_type = 'checkpoint_gaia'
@@ -1013,30 +1016,33 @@ class GaiaOSDriver(NetworkDriver):
                 output = output.split('\n')[-1]
                 output = output.replace(',', '')
                 output = output.split()
-                if output[0] == 'A':
-                    self.helpers.routeutil.parse_aggregate_route(protocols[output[0]], kwargs['destination'], output)
-                if output[0] == 'B':
-                    self.helpers.routeutil.parse_bgp_route(protocols[output[0]], kwargs['destination'], output)
-                if output[0] == 'C':
-                    x = self.helpers.routeutil.parse_connected_route(protocols[output[0]], kwargs['destination'], output)
-                    print(x)
-                    print(output)
-                if output[0] == 'H':
-                    self.helpers.routeutil.parse_hidden_route(protocols[output[0]], kwargs['destination'], output)
-                if output[0] == 'K':
-                    self.helpers.routeutil.parse_kernel_route(protocols[output[0]], kwargs['destination'], output)
-                if output[0] == 'O':
-                    self.helpers.routeutil.parse_ospf_route(protocols[output[0]], kwargs['destination'], output)
-                if output[0] == 'P':
-                    self.helpers.routeutil.parse_suppressed_route(protocols[output[0]], kwargs['destination'], output)
-                if output[0] == 'R':
-                    self.helpers.routeutil.parse_rip_route(protocols[output[0]], kwargs['destination'], output)
-                if output[0] == 'S':
-                    x = self.helpers.routeutil.parse_static_route(protocols[output[0]], kwargs['destination'], output)
-                    print(x)
-                    print(output)
-                if output[0] == 'U':
-                    self.helpers.routeutil.parse_unreachable_route(protocols[output[0]], kwargs['destination'])
+                if len(output) > 0:
+                    if output[0] == 'A':
+                        _ = self.helpers.routeutil.parse_aggregate_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'B':
+                        _ = self.helpers.routeutil.parse_bgp_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'C':
+                        x = self.helpers.routeutil.parse_connected_route(protocols[output[0]], kwargs['destination'], output)
+                        print(x)
+                        print(output)
+                    if output[0] == 'H':
+                        _ = self.helpers.routeutil.parse_hidden_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'K':
+                        _ = self.helpers.routeutil.parse_kernel_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'O':
+                        _ = self.helpers.routeutil.parse_ospf_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'P':
+                        _ = self.helpers.routeutil.parse_suppressed_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'R':
+                        _ = self.helpers.routeutil.parse_rip_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'S':
+                        x = self.helpers.routeutil.parse_static_route(protocols[output[0]], kwargs['destination'], output)
+                        print(x)
+                        print(output)
+                    if output[0] == 'U':
+                        _ = self.helpers.routeutil.parse_unreachable_route(protocols[output[0]], kwargs['destination'], output)
+                else:
+                    _ = self.helpers.routeutil.parse_none_route(protocols[output[0]], kwargs['destination'])
 
             else:
                 vs = self.get_virtual_systems()
