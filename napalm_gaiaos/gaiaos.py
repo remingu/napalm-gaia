@@ -22,6 +22,8 @@ import socket
 import ipaddress
 import napalm
 import string
+
+from napalm_gaiaos.helper import routeutil, iputil
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionException, SessionLockedException, \
     MergeConfigException, ReplaceConfigException, \
@@ -54,6 +56,9 @@ class GaiaOSDriver(NetworkDriver):
         self.is_security_gateway = False
         self.is_security_management = False
         self.optional_args = optional_args
+        self.helpers = lambda: None
+        self.helpers.iputil = iputil.IPutil()
+        self.helpers.routeutil = routeutil.RouteUtil()
         if self.optional_args is not None:
             if 'secret' in optional_args:
                 self.expert_password = optional_args['secret']
@@ -993,54 +998,46 @@ class GaiaOSDriver(NetworkDriver):
         }
         if 'destination' in kwargs:
             _ = {}
-            _[kwargs['destination']] = {}
-            _[kwargs['destination']]['protocol'] = ''
+            output = ''
             if self.vsx_state is False:
                 try:
                     cmd = 'show route destination {}'.format(kwargs['destination'])
                     output = self.device.send_command(cmd)
                     print(output)
-                    output = output.split('\n')[-1]
-                    output = output.replace(',', '')
-                    output = output.split()
-                    if output[0] == 'A':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                    if output[0] == 'B':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                    if output[0] == 'C':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                        _[kwargs['destination']]['outgoing_interface'] = output[5]
-                        _[kwargs['destination']]['age'] = 0
-                        _[kwargs['destination']]['next_hop'] = ''
-                        _[kwargs['destination']]['routing_table'] = 'default'
-                    if output[0] == 'H':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                    if output[0] == 'K':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                    if output[0] == 'O':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                    if output[0] == 'P':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                    if output[0] == 'R':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                    if output[0] == 'S':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-                        _[kwargs['destination']]['outgoing_interface'] = output[4]
-                        _[kwargs['destination']]['age'] = output[8]
-                        _[kwargs['destination']]['next_hop'] = output[3]
-                        _[kwargs['destination']]['routing_table'] = 'default'
-                        print(output)
-                    if output[0] == 'U':
-                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
-
-
-
-
-                    return _
                 except (socket.error, EOFError) as e:
                     raise ConnectionClosedException(str(e))
                 except Exception as e:
                     RuntimeError(e)
+
+
+                output = output.split('\n')[-1]
+                output = output.replace(',', '')
+                output = output.split()
+                if output[0] == 'A':
+                    self.helpers.routeutil.parse_aggregate_route(protocols[output[0]], kwargs['destination'], output)
+                if output[0] == 'B':
+                    self.helpers.routeutil.parse_bgp_route(protocols[output[0]], kwargs['destination'], output)
+                if output[0] == 'C':
+                    x = self.helpers.routeutil.parse_connected_route(protocols[output[0]], kwargs['destination'], output)
+                    print(x)
+                    print(output)
+                if output[0] == 'H':
+                    self.helpers.routeutil.parse_hidden_route(protocols[output[0]], kwargs['destination'], output)
+                if output[0] == 'K':
+                    self.helpers.routeutil.parse_kernel_route(protocols[output[0]], kwargs['destination'], output)
+                if output[0] == 'O':
+                    self.helpers.routeutil.parse_ospf_route(protocols[output[0]], kwargs['destination'], output)
+                if output[0] == 'P':
+                    self.helpers.routeutil.parse_suppressed_route(protocols[output[0]], kwargs['destination'], output)
+                if output[0] == 'R':
+                    self.helpers.routeutil.parse_rip_route(protocols[output[0]], kwargs['destination'], output)
+                if output[0] == 'S':
+                    x = self.helpers.routeutil.parse_static_route(protocols[output[0]], kwargs['destination'], output)
+                    print(x)
+                    print(output)
+                if output[0] == 'U':
+                    self.helpers.routeutil.parse_unreachable_route(protocols[output[0]], kwargs['destination'])
+
             else:
                 vs = self.get_virtual_systems()
 
