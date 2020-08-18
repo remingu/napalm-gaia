@@ -994,13 +994,14 @@ class GaiaOSDriver(NetworkDriver):
         if 'destination' in kwargs:
             _ = {}
             _[kwargs['destination']] = {}
-            _[kwargs['destination']]['protocol'] =''
+            _[kwargs['destination']]['protocol'] = ''
             if self.vsx_state is False:
-                try:outgoing_interface
+                try:
                     cmd = 'show route destination {}'.format(kwargs['destination'])
                     output = self.device.send_command(cmd)
                     print(output)
                     output = output.split('\n')[-1]
+                    output = output.replace(',', '')
                     output = output.split()
                     if output[0] == 'A':
                         _[kwargs['destination']]['protocol'] = protocols[output[0]]
@@ -1008,6 +1009,10 @@ class GaiaOSDriver(NetworkDriver):
                         _[kwargs['destination']]['protocol'] = protocols[output[0]]
                     if output[0] == 'C':
                         _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                        _[kwargs['destination']]['outgoing_interface'] = output[5]
+                        _[kwargs['destination']]['age'] = 0
+                        _[kwargs['destination']]['next_hop'] = ''
+                        _[kwargs['destination']]['routing_table'] = 'default'
                     if output[0] == 'H':
                         _[kwargs['destination']]['protocol'] = protocols[output[0]]
                     if output[0] == 'K':
@@ -1020,6 +1025,11 @@ class GaiaOSDriver(NetworkDriver):
                         _[kwargs['destination']]['protocol'] = protocols[output[0]]
                     if output[0] == 'S':
                         _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                        _[kwargs['destination']]['outgoing_interface'] = output[4]
+                        _[kwargs['destination']]['age'] = output[8]
+                        _[kwargs['destination']]['next_hop'] = output[3]
+                        _[kwargs['destination']]['routing_table'] = 'default'
+                        print(output)
                     if output[0] == 'U':
                         _[kwargs['destination']]['protocol'] = protocols[output[0]]
 
