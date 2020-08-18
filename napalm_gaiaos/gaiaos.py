@@ -979,17 +979,61 @@ class GaiaOSDriver(NetworkDriver):
                 ]
             }
         """
+        protocols = {
+            'A': 'Aggregate',
+            'B': 'BGP',
+            'C': 'Connected',
+            'H': 'Hidden',
+            'K': 'Kernel',
+            'O': 'OSPF',
+            'P': 'suppressed',
+            'R': 'RIP',
+            'S': 'Static',
+            'U': 'Unreachable'
+        }
         if 'destination' in kwargs:
+            _ = {}
+            _[kwargs['destination']] = {}
+            _[kwargs['destination']]['protocol'] =''
             if self.vsx_state is False:
-                try:
+                try:outgoing_interface
                     cmd = 'show route destination {}'.format(kwargs['destination'])
                     output = self.device.send_command(cmd)
+                    print(output)
+                    output = output.split('\n')[-1]
+                    output = output.split()
+                    if output[0] == 'A':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'B':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'C':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'H':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'K':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'O':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'P':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'R':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'S':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+                    if output[0] == 'U':
+                        _[kwargs['destination']]['protocol'] = protocols[output[0]]
+
+
+
+
+                    return _
                 except (socket.error, EOFError) as e:
                     raise ConnectionClosedException(str(e))
                 except Exception as e:
                     RuntimeError(e)
             else:
                 vs = self.get_virtual_systems()
+
 
         return {}
 
@@ -1396,7 +1440,7 @@ class GaiaOSDriver(NetworkDriver):
         """
         raise NotImplementedError
 
-    def get_route_to(self, **kwargs):
+    ''' def get_route_to(self, **kwargs):
         """
             not implemented yet
 
@@ -1404,6 +1448,8 @@ class GaiaOSDriver(NetworkDriver):
         :return:
         """
         raise NotImplementedError
+
+    '''
 
     def get_snmp_information(self):
         """
