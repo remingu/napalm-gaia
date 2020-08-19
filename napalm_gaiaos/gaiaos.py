@@ -992,6 +992,7 @@ class GaiaOSDriver(NetworkDriver):
             'B': 'BGP',
             'C': 'Connected',
             'H': 'Hidden',
+            'i': 'inactive',
             'K': 'Kernel',
             'O': 'OSPF',
             'P': 'suppressed',
@@ -1011,8 +1012,6 @@ class GaiaOSDriver(NetworkDriver):
                     raise ConnectionClosedException(str(e))
                 except Exception as e:
                     RuntimeError(e)
-
-
                 output = output.split('\n')[-1]
                 output = output.replace(',', '')
                 output = output.split()
@@ -1025,6 +1024,8 @@ class GaiaOSDriver(NetworkDriver):
                         _ = self.helpers.routeutil.parse_connected_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'H':
                         _ = self.helpers.routeutil.parse_hidden_route(protocols[output[0]], kwargs['destination'], output)
+                    if output[0] == 'i':
+                        _ = self.helpers.routeutil.parse_inactive_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'K':
                         _ = self.helpers.routeutil.parse_kernel_route(protocols[output[0]], kwargs['destination'], output)
                     if output[0] == 'O':
