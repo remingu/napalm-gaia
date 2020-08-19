@@ -1000,8 +1000,8 @@ class GaiaOSDriver(NetworkDriver):
             'S': 'Static',
             'U': 'Unreachable'
         }
+        _ = {}
         if 'destination' in kwargs:
-
             output = ''
             if self.vsx_state is False:
                 try:
@@ -1042,9 +1042,9 @@ class GaiaOSDriver(NetworkDriver):
                     _ = self.helpers.routeutil.parse_none_route('None', kwargs['destination'])
 
             else:
+                print(1)
                 vs = self.get_virtual_systems()
-                _ = {}
-
+                #print(vs)
         return _
 
 
