@@ -665,22 +665,25 @@ class GaiaOSDriver(NetworkDriver):
                 }
         """
         try:
-            if self._check_vsx_state() is True:
-                vs_regex = r'\|(.\d+)\|([A-z0-9-_]+\s.\w+)+(?:\s+\||\|)+([A-z0-9-_]+)+' \
-                           r'(?:\s+\||\|)+([A-z0-9_-]+)+(?:\s+\||\|)+(.*)(?:\|)'
-                command = 'cpstat -f stat vsx'
-                output = self.device.send_command(command)
-                vs = {}
-                for match in re.finditer(vs_regex, output, re.M):
-                    vs[match.group(1)] = {
-                        'type': match.group(2),
-                        'name': match.group(3),
-                        'policy': match.group(4),
-                        'sic': match.group(5)
-                    }
-                return vs
+            if self._check_for_dclish() is True:
+                pass
             else:
-                raise ValidationException('VSX not enabled')
+                if self._check_vsx_state() is True:
+                    vs_regex = r'\|(.\d+)\|([A-z0-9-_]+\s.\w+)+(?:\s+\||\|)+([A-z0-9-_]+)+' \
+                               r'(?:\s+\||\|)+([A-z0-9_-]+)+(?:\s+\||\|)+(.*)(?:\|)'
+                    command = 'cpstat -f stat vsx'
+                    output = self.device.send_command(command)
+                    vs = {}
+                    for match in re.finditer(vs_regex, output, re.M):
+                        vs[match.group(1)] = {
+                            'type': match.group(2),
+                            'name': match.group(3),
+                            'policy': match.group(4),
+                            'sic': match.group(5)
+                        }
+                    return vs
+                else:
+                    raise ValidationException('VSX not enabled')
         except (socket.error, EOFError) as e:
             raise ConnectionClosedException(str(e))
 
@@ -1554,3 +1557,5 @@ class GaiaOSDriver(NetworkDriver):
 
 if __name__ == '__main__':
     pass
+
+
